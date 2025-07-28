@@ -24,5 +24,10 @@ func main() {
 
 	routes.SetupRoutes(Engine, database)
 
-	Engine.Run(fmt.Sprintf(":%s", os.Getenv("APP_PORT")))
+	engineError := Engine.Run(fmt.Sprintf(":%s", os.Getenv("APP_PORT")))
+
+	if engineError != nil {
+		log.Fatal(engineError)
+	}
+	log.Println("Server is running on port:", os.Getenv("APP_PORT"))
 }
