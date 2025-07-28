@@ -25,8 +25,6 @@ func (repository *UserRepository) Create(userData *User) (*User, error) {
 		return nil, statementError
 	}
 
-	defer statement.Close()
-
 	createResult, createError := statement.Exec(userData.Email, userData.Password)
 
 	if createError != nil {
@@ -39,13 +37,22 @@ func (repository *UserRepository) Create(userData *User) (*User, error) {
 		return nil, insertError
 	}
 
+	defer func() {
+		statementCloseError := statement.Close()
+
+		if statementCloseError != nil {
+			insertError = fmt.Errorf("failed to close statement: %w", statementCloseError)
+
+		}
+	}()
+
 	userData.ID = lastInsertedId
 
 	return userData, nil
 }
 
 func (repository *UserRepository) FindUserByEmail(email string) (*User, error) {
-	var foundUser *User = &User{}
+	var foundUser = &User{}
 
 	const FIND_USER_BY_EMAIL_QUERY = `SELECT id,email,password FROM users WHERE email = ?`
 
