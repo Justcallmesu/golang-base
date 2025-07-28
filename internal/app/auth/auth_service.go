@@ -2,10 +2,12 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/cookies"
+	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/users"
 )
 
@@ -76,5 +78,11 @@ func (service *AuthService) Login(context *gin.Context) (string, error) {
 }
 
 func (service *AuthService) Logout(context *gin.Context) {
-	cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), "", -1)
+	cookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), "", -1)
+
+	if cookieError != nil {
+		context.JSON(http.StatusUnauthorized, response.NewResponse(cookieError.Error(), false, nil))
+		return
+	}
+
 }
