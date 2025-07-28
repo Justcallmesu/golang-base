@@ -26,6 +26,9 @@ go.work
 go.work.sum
 
 
+# Air
+tmp/
+
 # env file
 .env
 
