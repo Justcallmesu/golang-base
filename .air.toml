@@ -21,14 +21,14 @@ tmp_dir = "tmp"
   poll = false
   poll_interval = 0
   post_cmd = []
-  pre_cmd = []
+  pre_cmd = ["golangci-lint run --fix"]
   rerun = false
   rerun_delay = 500
-  send_interrupt = false
-  stop_on_error = false
+  send_interrupt = true
+  stop_on_error = true
 
 [color]
-  app = ""
+  app = "blue"
   build = "yellow"
   main = "magenta"
   runner = "green"
