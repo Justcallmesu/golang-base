@@ -33,7 +33,12 @@ func InitConnection() (*sql.DB, error) {
 
 	if err := db.Ping(); err != nil {
 		// If ping fails, close the connection pool and return the error.
-		db.Close()
+		dbCloseError := db.Close()
+
+		if dbCloseError != nil {
+			fmt.Printf("Failed to close database connection: %s\n", dbCloseError.Error())
+		}
+
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
