@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/api"
 	"justcallmesu.com/rest-api/internal/api/cookies"
+	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/auth"
 	"justcallmesu.com/rest-api/internal/app/users"
 )
@@ -31,33 +31,39 @@ func (handler *AuthHandler) SignUp(context *gin.Context) {
 	_, createError := handler.AuthService.SignUp(context)
 
 	if createError != nil {
-		context.JSON(http.StatusBadRequest, api.NewResponse(fmt.Sprintf("Error Signing You Up: %s", createError.Error()), false, nil))
+		context.JSON(http.StatusBadRequest, response.NewResponse(fmt.Sprintf("Error Signing You Up: %s", createError.Error()), false, nil))
 		return
 	}
 
-	context.JSON(http.StatusCreated, api.NewResponse("User Created", true, nil))
+	context.JSON(http.StatusCreated, response.NewResponse("User Created", true, nil))
 }
 
 func (handler *AuthHandler) Login(context *gin.Context) {
 	jwtToken, loginError := handler.AuthService.Login(context)
 
 	if loginError != nil {
-		context.JSON(http.StatusUnauthorized, api.NewResponse(loginError.Error(), false, nil))
+		context.JSON(http.StatusUnauthorized, response.NewResponse(loginError.Error(), false, nil))
 		return
 	}
 
 	cookieMaxAge, parseError := strconv.ParseInt(os.Getenv("COOKIE_EXPIRATION"), 10, 64)
 
 	if parseError != nil {
-		context.JSON(http.StatusUnauthorized, api.NewResponse(parseError.Error(), false, nil))
+		context.JSON(http.StatusUnauthorized, response.NewResponse(parseError.Error(), false, nil))
 		return
 	}
 
-	cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), jwtToken, cookieMaxAge)
-	context.JSON(http.StatusCreated, api.NewResponse("Login Success", true, nil))
+	setCookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), jwtToken, cookieMaxAge)
+
+	if setCookieError != nil {
+		context.JSON(http.StatusUnauthorized, response.NewResponse(setCookieError.Error(), false, nil))
+		return
+	}
+
+	context.JSON(http.StatusCreated, response.NewResponse("Login Success", true, nil))
 }
 
 func (handler *AuthHandler) Logout(context *gin.Context) {
 	handler.AuthService.Logout(context)
-	context.JSON(http.StatusAccepted, api.NewResponse("Logout Success", true, nil))
+	context.JSON(http.StatusAccepted, response.NewResponse("Logout Success", true, nil))
 }
