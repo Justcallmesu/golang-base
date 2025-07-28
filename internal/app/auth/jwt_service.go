@@ -19,9 +19,6 @@ func GenerateToken(userId int64, email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, signError := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-
-	fmt.Println(signError)
-
 	if signError != nil {
 		return "", signError
 	}
