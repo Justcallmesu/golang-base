@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(userId int64, email string) (string, error) {
+func GenerateToken(userId uint, email string) (string, error) {
 
 	claims, claimsError := NewJwtClaims(userId, email)
 

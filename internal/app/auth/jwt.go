@@ -10,12 +10,12 @@ import (
 )
 
 type JWTClaims struct {
-	UserID int64  `json:"user_id"`
-	Email  string `json:"email"`
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
-func NewJwtClaims(userId int64, email string) (*JWTClaims, error) {
+func NewJwtClaims(userId uint, username string) (*JWTClaims, error) {
 
 	jwtExpirationDuration, jwtExpirationError := strconv.ParseInt(os.Getenv("JWT_EXPIRATION"), 10, 64)
 
@@ -26,8 +26,8 @@ func NewJwtClaims(userId int64, email string) (*JWTClaims, error) {
 	expiresAt := time.Now().Add(time.Duration(jwtExpirationDuration) * time.Hour)
 
 	return &JWTClaims{
-		UserID: userId,
-		Email:  email,
+		UserID:   userId,
+		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

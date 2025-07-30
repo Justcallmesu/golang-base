@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var Database *sql.DB
 
-func InitConnection() (*sql.DB, error) {
+func InitConnection() (*gorm.DB, error) {
 	datasourceNetwork := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -20,29 +21,14 @@ func InitConnection() (*sql.DB, error) {
 		os.Getenv("DB_NAME"),
 	)
 
-	db, err := sql.Open("mysql", datasourceNetwork)
+	database, databaseError := gorm.Open(mysql.New(mysql.Config{
+		DSN: datasourceNetwork,
+	}))
 
-	if err != nil {
+	if databaseError != nil {
 		// This error is rare but should be handled.
-		return nil, err
+		return nil, databaseError
 	}
 
-	db.SetConnMaxLifetime(3 * time.Minute)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
-
-	if err := db.Ping(); err != nil {
-		// If ping fails, close the connection pool and return the error.
-		dbCloseError := db.Close()
-
-		if dbCloseError != nil {
-			fmt.Printf("Failed to close database connection: %s\n", dbCloseError.Error())
-		}
-
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	fmt.Println("Database Connected!")
-
-	return db, nil
+	return database, nil
 }

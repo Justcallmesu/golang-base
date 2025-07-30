@@ -1,10 +1,13 @@
 package users
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
 
 type User struct {
-	ID       int64  `json:"id,omitempty"`
-	Email    string `json:"email,omitempty" binding:"required"`
+	gorm.Model
+	Username string `json:"username,omitempty" binding:"required"`
 	Password string `json:"password,omitempty" binding:"required"`
 }
 

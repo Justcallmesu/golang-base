@@ -47,7 +47,6 @@ func (service *AuthService) SignUp(context *gin.Context) (*users.User, error) {
 }
 
 func (service *AuthService) Login(context *gin.Context) (string, error) {
-
 	var credentials LoginUser
 
 	loginError := context.ShouldBindJSON(&credentials)
@@ -68,7 +67,7 @@ func (service *AuthService) Login(context *gin.Context) (string, error) {
 		return "", fmt.Errorf("email atau password tidak sesuai")
 	}
 
-	token, loginError := GenerateToken(foundUser.ID, foundUser.Email)
+	token, loginError := GenerateToken(foundUser.ID, foundUser.Username)
 
 	if loginError != nil {
 		return "", loginError

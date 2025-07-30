@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"justcallmesu.com/rest-api/internal/api/cookies"
 	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/auth"
@@ -18,7 +18,7 @@ type AuthHandler struct {
 	AuthService *auth.AuthService
 }
 
-func NewAuthHandler(database *sql.DB) *AuthHandler {
+func NewAuthHandler(database *gorm.DB) *AuthHandler {
 	UserRepository := users.NewUserRepository(database)
 	authService := auth.NewAuthService(UserRepository)
 
