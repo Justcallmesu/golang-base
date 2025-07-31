@@ -14,7 +14,6 @@ func AuthRoutes(engine *gin.Engine, database *gorm.DB) {
 	authHandler := handler.NewAuthHandler(database)
 
 	// Routes
-	authRouter.POST("/sign-up", authHandler.SignUp)
 	authRouter.POST("/login", authHandler.Login)
 	authRouter.GET("/logout", authHandler.Logout)
 }

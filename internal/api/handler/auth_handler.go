@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -25,17 +24,6 @@ func NewAuthHandler(database *gorm.DB) *AuthHandler {
 	return &AuthHandler{
 		AuthService: authService,
 	}
-}
-
-func (handler *AuthHandler) SignUp(context *gin.Context) {
-	_, createError := handler.AuthService.SignUp(context)
-
-	if createError != nil {
-		context.JSON(http.StatusBadRequest, response.NewResponse(fmt.Sprintf("Error Signing You Up: %s", createError.Error()), false, nil))
-		return
-	}
-
-	context.JSON(http.StatusCreated, response.NewResponse("User Created", true, nil))
 }
 
 func (handler *AuthHandler) Login(context *gin.Context) {
