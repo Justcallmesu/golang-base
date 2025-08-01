@@ -1,13 +1,9 @@
 package auth
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"os"
 
-	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/api/cookies"
-	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/users"
 )
 
@@ -21,41 +17,8 @@ func NewAuthService(repository *users.UserRepository) *AuthService {
 	}
 }
 
-func (service *AuthService) SignUp(context *gin.Context) (*users.User, error) {
-
-	var userData users.User
-
-	createError := context.ShouldBindJSON(&userData)
-
-	if createError != nil {
-		return nil, createError
-	}
-
-	encryptError := userData.HashPassword()
-
-	if encryptError != nil {
-		return nil, encryptError
-	}
-
-	createdData, createError := service.UserRepository.Create(&userData)
-
-	if createError != nil {
-		return nil, createError
-	}
-
-	return createdData, nil
-}
-
-func (service *AuthService) Login(context *gin.Context) (string, error) {
-	var credentials LoginUser
-
-	loginError := context.ShouldBindJSON(&credentials)
-
-	if loginError != nil {
-		return "", loginError
-	}
-
-	foundUser, loginError := service.UserRepository.FindUserByEmail(credentials.Email)
+func (service *AuthService) Login(context context.Context, credentials *LoginUser) (string, error) {
+	foundUser, loginError := service.UserRepository.FindUserByUsername(credentials.Username, context)
 
 	if loginError != nil {
 		return "", loginError
@@ -74,14 +37,4 @@ func (service *AuthService) Login(context *gin.Context) (string, error) {
 	}
 
 	return token, nil
-}
-
-func (service *AuthService) Logout(context *gin.Context) {
-	cookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), "", -1)
-
-	if cookieError != nil {
-		context.JSON(http.StatusUnauthorized, response.NewResponse(cookieError.Error(), false, nil))
-		return
-	}
-
 }
