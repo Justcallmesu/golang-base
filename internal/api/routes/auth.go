@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"justcallmesu.com/rest-api/internal/api/handler"
+	"justcallmesu.com/rest-api/internal/app/auth"
 )
 
 func AuthRoutes(engine *gin.Engine, database *gorm.DB) {
@@ -11,7 +11,7 @@ func AuthRoutes(engine *gin.Engine, database *gorm.DB) {
 	authRouter := engine.Group("/auth")
 
 	//Handler
-	authHandler := handler.NewAuthHandler(database)
+	authHandler := auth.NewAuthHandler(database)
 
 	// Routes
 	authRouter.POST("/login", authHandler.Login)
