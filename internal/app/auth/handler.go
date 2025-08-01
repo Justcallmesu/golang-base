@@ -1,4 +1,4 @@
-package handler
+package auth
 
 import (
 	"net/http"
@@ -9,17 +9,16 @@ import (
 	"gorm.io/gorm"
 	"justcallmesu.com/rest-api/internal/api/cookies"
 	"justcallmesu.com/rest-api/internal/api/response"
-	"justcallmesu.com/rest-api/internal/app/auth"
 	"justcallmesu.com/rest-api/internal/app/users"
 )
 
 type AuthHandler struct {
-	AuthService *auth.AuthService
+	AuthService *AuthService
 }
 
 func NewAuthHandler(database *gorm.DB) *AuthHandler {
 	UserRepository := users.NewUserRepository(database)
-	authService := auth.NewAuthService(UserRepository)
+	authService := NewAuthService(UserRepository)
 
 	return &AuthHandler{
 		AuthService: authService,
@@ -27,7 +26,16 @@ func NewAuthHandler(database *gorm.DB) *AuthHandler {
 }
 
 func (handler *AuthHandler) Login(context *gin.Context) {
-	jwtToken, loginError := handler.AuthService.Login(context)
+	var credentials = LoginUser{}
+
+	bindError := context.ShouldBindJSON(&credentials)
+
+	if bindError != nil {
+		context.JSON(http.StatusBadRequest, response.NewResponse(bindError.Error(), false, nil))
+		return
+	}
+
+	jwtToken, loginError := handler.AuthService.Login(context, &credentials)
 
 	if loginError != nil {
 		context.JSON(http.StatusUnauthorized, response.NewResponse(loginError.Error(), false, nil))
@@ -52,6 +60,13 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 }
 
 func (handler *AuthHandler) Logout(context *gin.Context) {
-	handler.AuthService.Logout(context)
+
+	setCookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), "", -1)
+
+	if setCookieError != nil {
+		context.JSON(http.StatusInternalServerError, response.NewResponse(setCookieError.Error(), false, nil))
+		return
+	}
+
 	context.JSON(http.StatusAccepted, response.NewResponse("Logout Success", true, nil))
 }
