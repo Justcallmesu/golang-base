@@ -1,6 +1,10 @@
 package users
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
 	"gorm.io/gorm"
 )
 
@@ -14,11 +18,17 @@ func NewUserRepository(database *gorm.DB) *UserRepository {
 	}
 }
 
-func (repository *UserRepository) Create(userData *User) (*User, error) {
+func (repository *UserRepository) FindUserByUsername(email string, context context.Context) (*User, error) {
+	user, fetchError := gorm.G[User](repository.sqlDatabaseConnection).First(context)
 
-	return nil, nil
-}
+	if fetchError != nil {
+		fmt.Printf("Error fetching user with email %s: %v\n", email, fetchError)
 
-func (repository *UserRepository) FindUserByEmail(email string) (*User, error) {
-	return nil, nil
+		if fetchError == gorm.ErrRecordNotFound {
+			return nil, errors.New("User or Password Doesnt Match")
+		}
+		return nil, errors.New("something went wrong while fetching user")
+	}
+
+	return &user, nil
 }
