@@ -12,7 +12,7 @@ import (
 
 var Database *sql.DB
 
-func InitConnection() (*gorm.DB, error) {
+func InitConnection() *gorm.DB {
 	datasourceNetwork := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -27,8 +27,9 @@ func InitConnection() (*gorm.DB, error) {
 
 	if databaseError != nil {
 		// This error is rare but should be handled.
-		return nil, databaseError
+		panic(fmt.Sprintf("Database connection error: %v", databaseError))
+
 	}
 
-	return database, nil
+	return database
 }
