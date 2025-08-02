@@ -16,11 +16,7 @@ func main() {
 
 	Engine := gin.Default()
 
-	database, databaseConnectionError := database.InitConnection()
-
-	if databaseConnectionError != nil {
-		log.Fatal(databaseConnectionError)
-	}
+	database := database.InitConnection()
 
 	routes.SetupRoutes(Engine, database)
 
