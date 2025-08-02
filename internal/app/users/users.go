@@ -7,8 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `json:"username,omitempty" binding:"required"`
-	Password string `json:"password,omitempty" binding:"required"`
+	Username     string `json:"username,omitempty" binding:"required"`
+	Password     string `json:"password,omitempty" binding:"required"`
+	RefreshToken string `json:"refresh_token,omitempty" binding:"-"`
 }
 
 func (user *User) HashPassword() error {
