@@ -10,6 +10,7 @@ import (
 	"justcallmesu.com/rest-api/internal/api/cookies"
 	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/users"
+	application_error "justcallmesu.com/rest-api/internal/utils/error"
 )
 
 type AuthHandler struct {
@@ -31,7 +32,7 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 	bindError := context.ShouldBindJSON(&credentials)
 
 	if bindError != nil {
-		context.JSON(http.StatusBadRequest, response.NewResponse(bindError.Error(), false, nil))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Invalid request body", application_error.FormatValidationError(bindError)))
 		return
 	}
 
