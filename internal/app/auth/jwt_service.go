@@ -4,37 +4,105 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(userId uint, email string) (string, error) {
+type TokenType int
 
-	claims, claimsError := NewJwtClaims(userId, email)
+const (
+	AccessTokenType = iota
+	RefreshTokenType
+)
 
-	if claimsError != nil {
-		return "", claimsError
-	}
+type JWTService struct {
+	accessTokenSecret  string
+	refreshTokenSecret string
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, signError := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if signError != nil {
-		return "", signError
-	}
-
-	return tokenString, nil
+	accessTokenExpiration  time.Duration
+	refreshTokenExpiration time.Duration
 }
 
-func ParseToken(tokenString string) (*JWTClaims, error) {
+func NewJWTService() *JWTService {
+	accessTokenExpiration, err := strconv.ParseInt(os.Getenv("JWT_ACCESS_EXPIRATION"), 10, 64)
+	if err != nil {
+		panic("Invalid JWT_ACCESS_EXPIRATION value")
+	}
+
+	refreshTokenExpiration, err := strconv.ParseInt(os.Getenv("JWT_REFRESH_EXPIRATION"), 10, 64)
+	if err != nil {
+		panic("Invalid JWT_REFRESH_EXPIRATION value")
+	}
+
+	accessTokenExpirationDate := time.Duration(accessTokenExpiration) * time.Minute
+	refreshTokenExpirationDate := time.Duration(refreshTokenExpiration) * time.Hour
+
+	return &JWTService{
+		accessTokenSecret:      os.Getenv("JWT_ACCESS_SECRET"),
+		refreshTokenSecret:     os.Getenv("JWT_REFRESH_SECRET"),
+		accessTokenExpiration:  accessTokenExpirationDate,
+		refreshTokenExpiration: refreshTokenExpirationDate,
+	}
+}
+
+func (service *JWTService) GenerateToken(userId uint, username string, tokenType TokenType) (string, error) {
+	var generateError error
+	var token *jwt.Token
+	var signedToken, secret string
+	var expiresAt *jwt.NumericDate
+
+
+	switch tokenType {
+	case AccessTokenType:
+		expiresAt = jwt.NewNumericDate(time.Now().Add(service.accessTokenExpiration))
+		secret = service.accessTokenSecret
+	case RefreshTokenType:
+		expiresAt = jwt.NewNumericDate(time.Now().Add(service.refreshTokenExpiration))
+		secret = service.refreshTokenSecret
+	default:
+		return "", errors.New("invalid token type")
+	}
+
+	claims := &JWTClaims{
+		UserID:   userId,
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: expiresAt,
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			Issuer:   "justcallmesu",
+		},
+	}
+
+	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signedToken, generateError = token.SignedString([]byte(secret))
+
+	if generateError != nil {
+		return "", fmt.Errorf("failed to sign access token: %w", generateError)
+	}
+	return signedToken, nil
+}
+
+func (service *JWTService) ParseToken(tokenString string, tokenType TokenType) (*JWTClaims, error) {
 	claims := &JWTClaims{}
 
-	token, parseError := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
+	var token *jwt.Token
+	var parseError error
+
+	token, parseError = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		switch tokenType {
+		case AccessTokenType:
+			return []byte(service.accessTokenSecret), nil
+		case RefreshTokenType:
+			return []byte(service.refreshTokenSecret), nil
+		}
+		return nil, fmt.Errorf("invalid token type: %d", tokenType)
 	})
 
 	if parseError != nil {
@@ -54,5 +122,4 @@ func ParseToken(tokenString string) (*JWTClaims, error) {
 	}
 
 	return parsedClaims, nil
-
 }
