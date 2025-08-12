@@ -2,27 +2,23 @@ package auth
 
 import (
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"justcallmesu.com/rest-api/internal/api/cookies"
 	"justcallmesu.com/rest-api/internal/api/response"
-	"justcallmesu.com/rest-api/internal/app/users"
+	"justcallmesu.com/rest-api/internal/app/cookies"
 	application_error "justcallmesu.com/rest-api/internal/utils/error"
 )
 
 type AuthHandler struct {
-	AuthService *AuthService
+	AuthService   *AuthService
+	CookieService *cookies.TokenCookieService
 }
 
-func NewAuthHandler(database *gorm.DB) *AuthHandler {
-	UserRepository := users.NewUserRepository(database)
-	authService := NewAuthService(UserRepository)
+func NewAuthHandler(authService *AuthService, cookieService *cookies.TokenCookieService) *AuthHandler {
 
 	return &AuthHandler{
 		AuthService: authService,
+		CookieService: cookieService,
 	}
 }
 
@@ -36,38 +32,27 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 		return
 	}
 
-	jwtToken, loginError := handler.AuthService.Login(context, &credentials)
+	tokens, loginError := handler.AuthService.Login(context, &credentials)
 
 	if loginError != nil {
 		context.JSON(http.StatusUnauthorized, response.NewResponse(loginError.Error(), false, nil))
 		return
 	}
 
-	cookieMaxAge, parseError := strconv.ParseInt(os.Getenv("COOKIE_EXPIRATION"), 10, 64)
-
-	if parseError != nil {
-		context.JSON(http.StatusUnauthorized, response.NewResponse(parseError.Error(), false, nil))
-		return
-	}
-
-	setCookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), jwtToken, cookieMaxAge)
-
-	if setCookieError != nil {
-		context.JSON(http.StatusUnauthorized, response.NewResponse(setCookieError.Error(), false, nil))
-		return
-	}
+	handler.CookieService.GenerateTokenCookies(context, tokens)
 
 	context.JSON(http.StatusCreated, response.NewResponse("Login Success", true, nil))
 }
 
 func (handler *AuthHandler) Logout(context *gin.Context) {
 
-	setCookieError := cookies.SetCookie(context, os.Getenv("COOKIE_NAME"), "", -1)
+	resetTokenError :=	handler.CookieService.ResetTokenCookies(context)
 
-	if setCookieError != nil {
-		context.JSON(http.StatusInternalServerError, response.NewResponse(setCookieError.Error(), false, nil))
+	if(resetTokenError != nil) {
+		context.JSON(http.StatusInternalServerError, response.NewErrorResponse("Failed to reset cookies", resetTokenError.Error()))
 		return
 	}
+
 
 	context.JSON(http.StatusAccepted, response.NewResponse("Logout Success", true, nil))
 }
