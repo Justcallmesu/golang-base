@@ -13,6 +13,7 @@ func SetupRoutes(ginEngine *gin.Engine, database *gorm.DB) {
 
 	var middlewares = app.NewMiddlewares(services)
 
-	AuthRoutes(ginEngine, services,middlewares)
+	AuthRoutes(ginEngine, services, middlewares)
 	ginEngine.Use(middlewares.AuthMiddleware.EnsureSessionIsValid())
+	BlogRoutes(ginEngine, services, middlewares)
 }
