@@ -18,11 +18,11 @@ func NewUserRepository(database *gorm.DB) *UserRepository {
 	}
 }
 
-func (repository *UserRepository) FindUserByUsername(email string, context context.Context) (*User, error) {
-	user, fetchError := gorm.G[User](repository.sqlDatabaseConnection).First(context)
+func (repository *UserRepository) FindUserByUsername(username string, context context.Context) (*User, error) {
+	user, fetchError := gorm.G[User](repository.sqlDatabaseConnection).Where("username=?", username).First(context)
 
 	if fetchError != nil {
-		fmt.Printf("Error fetching user with email %s: %v\n", email, fetchError)
+		fmt.Printf("Error fetching user with username %s: %v\n", username, fetchError)
 
 		if fetchError == gorm.ErrRecordNotFound {
 			return nil, errors.New("User or Password Doesnt Match")
