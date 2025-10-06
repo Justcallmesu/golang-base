@@ -7,6 +7,7 @@ services:
       tags:
         - portfolio-dev-server:latest
         # - portfolio-prod-server:latest
+
     container_name: portfolio-dev-server
     ports:
       - "8081:8080"
@@ -21,6 +22,11 @@ services:
     volumes:
       - ./:/home/portfolio
     # command: ["air"]
+    develop:
+      watch:
+        - path: .
+          target: /home/portfolio
+          action: sync
 
   portfolio-database:
     image: mysql:latest
