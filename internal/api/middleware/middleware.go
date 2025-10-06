@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
@@ -34,7 +33,6 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 
 		} else {
 			claims, claimsError = middleware.JWTService.ParseToken(tokenString, auth.AccessTokenType)
-				fmt.Println(tokenString)
 
 			if claimsError != nil {
 				regenerateError = middleware.AuthService.RegenerateAccessToken(context)
