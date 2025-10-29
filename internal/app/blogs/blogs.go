@@ -1,7 +1,6 @@
 package blogs
 
 import (
-	"gorm.io/gorm"
 	"justcallmesu.com/rest-api/pkg/types"
 )
 
@@ -10,16 +9,18 @@ type BlogQuery struct {
 }
 
 type Blog struct {
-	gorm.Model
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description"  binding:"required"`
-	ReadingTime int32  `json:"readingTime" binding:"required,number,min=1"`
+	types.BaseEntityModel
+	Title       string        `json:"title,omitempty" binding:"required"`
+	Description string        `json:"description,omitempty"  binding:"required"`
+	ReadingTime int32         `json:"readingTime,omitempty" binding:"required,number,gte=1"`
+	Details     []BlogDetails `json:"details,omitzero" gorm:"foreignKey:BlogId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;references:Id"`
 }
 
-func NewBlog(title string, description string, readingTime int32) *Blog {
+func NewBlog(title string, description string, readingTime int32, blogDetails []BlogDetails) *Blog {
 	return &Blog{
 		Title:       title,
 		Description: description,
 		ReadingTime: readingTime,
+		Details:     blogDetails,
 	}
 }
