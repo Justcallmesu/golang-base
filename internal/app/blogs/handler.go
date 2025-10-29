@@ -96,7 +96,7 @@ func (handler *BlogHandler) Update(context *gin.Context) {
 	updateError := handler.BlogService.UpdateOne(context, &updatedBlog)
 
 	if updateError != nil {
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Terjadi kesalahan saat mengedit", application_error.FormatValidationError(updateError)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal saat mengubah", application_error.FormatValidationError(updateError)))
 		return
 	}
 
