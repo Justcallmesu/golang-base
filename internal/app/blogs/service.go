@@ -2,7 +2,6 @@ package blogs
 
 import (
 	"context"
-	"fmt"
 )
 
 type BlogService struct {
@@ -28,28 +27,20 @@ func (service *BlogService) CreateOne(context context.Context, newBlog *Blog) er
 }
 
 func (service *BlogService) UpdateOne(context context.Context, updatedBlog *Blog) error {
-	affectedRow, updateError := service.BlogRepository.UpdateOne(updatedBlog, context)
+	updateError := service.BlogRepository.UpdateOne(updatedBlog, context)
 
 	if updateError != nil {
 		return updateError
-	}
-
-	if affectedRow <= 0 {
-		return fmt.Errorf("Blog dengan id %d tidak ditemukan, Gagal untuk dihapus", updatedBlog.ID)
 	}
 
 	return nil
 }
 
 func (service *BlogService) DeleteOne(context context.Context, targetId int) error {
-	affectedRow, deleteError := service.BlogRepository.DeleteOne(targetId, context)
+	deleteError := service.BlogRepository.DeleteOne(targetId, context)
 
 	if deleteError != nil {
 		return deleteError
-	}
-
-	if affectedRow <= 0 {
-		return fmt.Errorf("Blog dengan id %d tidak ditemukan, Gagal untuk dihapus", targetId)
 	}
 
 	return nil
