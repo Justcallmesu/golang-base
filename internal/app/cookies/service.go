@@ -29,7 +29,7 @@ type TokenCookieService struct {
 }
 
 func NewTokenCookieService() *TokenCookieService {
-	refreshTokenExpiration, err := strconv.ParseInt(os.Getenv("COOKIE_REFRESH_EXPIRATION"), 10, 64) 
+	refreshTokenExpiration, err := strconv.ParseInt(os.Getenv("COOKIE_REFRESH_EXPIRATION"), 10, 64)
 	if err != nil {
 		panic("Invalid COOKIE_REFRESH_EXPIRATION value")
 	}
@@ -47,11 +47,31 @@ func NewTokenCookieService() *TokenCookieService {
 	}
 }
 
+func (service *TokenCookieService) GetRefreshTokenCookie(context *gin.Context) (string, error) {
+	tokenString, tokenError := context.Cookie(service.refreshTokenName)
+
+	if tokenError != nil {
+		return "", tokenError
+	}
+
+	return tokenString, nil
+}
+
+func (service *TokenCookieService) GetAccessTokenCookie(context *gin.Context) (string, error) {
+	tokenString, tokenError := context.Cookie(service.accessTokenName)
+
+	if tokenError != nil {
+		return "", tokenError
+	}
+
+	return tokenString, nil
+}
+
 func (service *TokenCookieService) GenerateRefreshCookies(context *gin.Context, refreshToken string) {
 	context.SetCookie(service.refreshTokenName, refreshToken, int(service.refreshTokenExpiration.Seconds()), "/", "", false, true)
 }
 
-func (service *TokenCookieService) GenerateAccessCookies(context *gin.Context, accessToken string)  {
+func (service *TokenCookieService) GenerateAccessCookies(context *gin.Context, accessToken string) {
 	context.SetCookie(service.accessTokenName, accessToken, int(service.accessTokenExpiration.Seconds()), "/", "", false, true)
 }
 
