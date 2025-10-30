@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/cookies"
-	application_error "justcallmesu.com/rest-api/internal/utils/error"
+	application_error "justcallmesu.com/rest-api/internal/utils"
 )
 
 type AuthHandler struct {
@@ -17,7 +17,7 @@ type AuthHandler struct {
 func NewAuthHandler(authService *AuthService, cookieService *cookies.TokenCookieService) *AuthHandler {
 
 	return &AuthHandler{
-		AuthService: authService,
+		AuthService:   authService,
 		CookieService: cookieService,
 	}
 }
@@ -46,13 +46,12 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 
 func (handler *AuthHandler) Logout(context *gin.Context) {
 
-	resetTokenError :=	handler.CookieService.ResetTokenCookies(context)
+	resetTokenError := handler.CookieService.ResetTokenCookies(context)
 
-	if(resetTokenError != nil) {
+	if resetTokenError != nil {
 		context.JSON(http.StatusInternalServerError, response.NewErrorResponse("Failed to reset cookies", resetTokenError.Error()))
 		return
 	}
-
 
 	context.JSON(http.StatusAccepted, response.NewResponse("Logout Success", true, nil))
 }

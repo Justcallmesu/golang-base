@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/response"
-	application_error "justcallmesu.com/rest-api/internal/utils/error"
+	application_error "justcallmesu.com/rest-api/internal/utils"
 )
 
 type BlogHandler struct {
