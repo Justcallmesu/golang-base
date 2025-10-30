@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"justcallmesu.com/rest-api/internal/utils"
 )
 
 type TokenType int
@@ -23,6 +24,8 @@ type JWTService struct {
 
 	accessTokenExpiration  time.Duration
 	refreshTokenExpiration time.Duration
+
+	jwtISS string
 }
 
 func NewJWTService() *JWTService {
@@ -44,6 +47,7 @@ func NewJWTService() *JWTService {
 		refreshTokenSecret:     os.Getenv("JWT_REFRESH_SECRET"),
 		accessTokenExpiration:  accessTokenExpirationDate,
 		refreshTokenExpiration: refreshTokenExpirationDate,
+		jwtISS:                 utils.GetDefaultValue[string](os.Getenv("APP_NAME"), "anonymous"),
 	}
 }
 
@@ -52,7 +56,6 @@ func (service *JWTService) GenerateToken(userId uint, username string, tokenType
 	var token *jwt.Token
 	var signedToken, secret string
 	var expiresAt *jwt.NumericDate
-
 
 	switch tokenType {
 	case AccessTokenType:
@@ -70,8 +73,8 @@ func (service *JWTService) GenerateToken(userId uint, username string, tokenType
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: expiresAt,
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			Issuer:   "justcallmesu",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    service.jwtISS,
 		},
 	}
 
