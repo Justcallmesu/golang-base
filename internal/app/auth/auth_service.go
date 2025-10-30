@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/app/cookies"
@@ -52,17 +51,11 @@ func (service *AuthService) Login(context context.Context, credentials *LoginUse
 	return cookies.NewTokenCookie(refreshToken, accessToken), nil
 }
 
-func (service *AuthService)IsRefreshTokenExist(context *gin.Context) (bool, string) {
-	tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_REFRESH_TOKEN"))
-
-	return tokenError == nil, tokenString
-}
-
 func (service *AuthService) RegenerateAccessToken(context *gin.Context) error {
 	var claims *JWTClaims
 	var claimsError error
 
-	tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_REFRESH_TOKEN"))
+	tokenString, tokenError := service.CookieService.GetRefreshTokenCookie(context)
 
 	if tokenError != nil {
 		return fmt.Errorf("unauthorized")
@@ -80,7 +73,33 @@ func (service *AuthService) RegenerateAccessToken(context *gin.Context) error {
 		return accessTokenGenerateError
 	}
 
-	 service.CookieService.GenerateAccessCookies(context, accessToken)
+	service.CookieService.GenerateAccessCookies(context, accessToken)
 
-	 return nil;
+	return nil
+}
+
+func (service *AuthService) RegenerateRefreshToken(context *gin.Context) error {
+	var claims *JWTClaims
+
+	tokenString, tokenError := service.CookieService.GetRefreshTokenCookie(context)
+
+	if tokenError != nil {
+		return fmt.Errorf("unauthorized")
+	}
+
+	claims, claimsError := service.JwtService.ParseToken(tokenString, RefreshTokenType)
+
+	if claimsError != nil {
+		return claimsError
+	}
+
+	refreshToken, refreshTokenGenerateError := service.JwtService.GenerateToken(claims.UserID, claims.Username, RefreshTokenType)
+
+	if refreshTokenGenerateError != nil {
+		return refreshTokenGenerateError
+	}
+
+	service.CookieService.GenerateRefreshCookies(context, refreshToken)
+
+	return nil
 }
