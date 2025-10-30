@@ -1,4 +1,4 @@
-package application_error
+package utils
 
 import (
 	"errors"
