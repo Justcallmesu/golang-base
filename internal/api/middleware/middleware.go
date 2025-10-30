@@ -46,12 +46,6 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 			return
 		}
 
-		refreshTokenRegenerateError := middleware.AuthService.RegenerateRefreshToken(context)
-
-		if refreshTokenRegenerateError != nil {
-			context.AbortWithStatusJSON(http.StatusUnauthorized, response.NewResponse("unauthorized", false, nil))
-		}
-
 		context.Set("UserData", claims)
 
 		context.Next()
