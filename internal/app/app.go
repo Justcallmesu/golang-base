@@ -50,6 +50,6 @@ func NewServices(Repositories *Repositories) *Services {
 
 func NewMiddlewares(Services *Services) *Middlewares {
 	return &Middlewares{
-		AuthMiddleware: middleware.NewAuthMiddleware(Services.AuthService, Services.JWTService),
+		AuthMiddleware: middleware.NewAuthMiddleware(Services.AuthService, Services.JWTService, Services.CookieService),
 	}
 }
