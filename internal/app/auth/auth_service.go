@@ -75,6 +75,12 @@ func (service *AuthService) RegenerateAccessToken(context *gin.Context) error {
 
 	service.CookieService.GenerateAccessCookies(context, accessToken)
 
+	regenerateRefreshTokenError := service.RegenerateRefreshToken(context)
+
+	if regenerateRefreshTokenError != nil {
+		return fmt.Errorf("unauthorized")
+	}
+
 	return nil
 }
 
