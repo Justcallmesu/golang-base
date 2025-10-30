@@ -2,22 +2,24 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/response"
 	"justcallmesu.com/rest-api/internal/app/auth"
+	"justcallmesu.com/rest-api/internal/app/cookies"
 )
 
 type AuthMiddleware struct {
-	AuthService *auth.AuthService
-	JWTService  *auth.JWTService
+	AuthService   *auth.AuthService
+	JWTService    *auth.JWTService
+	cookieService *cookies.TokenCookieService
 }
 
-func NewAuthMiddleware(authService *auth.AuthService, jwtService *auth.JWTService) *AuthMiddleware {
+func NewAuthMiddleware(authService *auth.AuthService, jwtService *auth.JWTService, cookieService *cookies.TokenCookieService) *AuthMiddleware {
 	return &AuthMiddleware{
-		AuthService: authService,
-		JWTService:  jwtService,
+		AuthService:   authService,
+		JWTService:    jwtService,
+		cookieService: cookieService,
 	}
 }
 
@@ -26,7 +28,7 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 		var claims *auth.JWTClaims
 		var claimsError, regenerateError error
 
-		tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_ACCESS_TOKEN"))
+		tokenString, tokenError := middleware.cookieService.GetAccessTokenCookie(context)
 
 		if tokenError != nil {
 			regenerateError = middleware.AuthService.RegenerateAccessToken(context)
@@ -42,6 +44,12 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 		if regenerateError != nil || claimsError != nil {
 			context.AbortWithStatusJSON(http.StatusUnauthorized, response.NewResponse("unauthorized", false, nil))
 			return
+		}
+
+		refreshTokenRegenerateError := middleware.AuthService.RegenerateRefreshToken(context)
+
+		if refreshTokenRegenerateError != nil {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, response.NewResponse("unauthorized", false, nil))
 		}
 
 		context.Set("UserData", claims)
