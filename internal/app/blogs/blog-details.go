@@ -1,7 +1,7 @@
 package blogs
 
 import (
-	"justcallmesu.com/rest-api/pkg/types"
+	"justcallmesu.com/rest-api/internal/types"
 )
 
 type BlogDetailsType string
