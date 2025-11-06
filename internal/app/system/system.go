@@ -4,8 +4,8 @@ type SystemService struct {
 	FileSystemService *FileSystemService
 }
 
-func NewSystemService(fileSystemService *FileSystemService) *SystemService {
+func NewSystemService(defaultUploadWritePath string) *SystemService {
 	return &SystemService{
-		FileSystemService: fileSystemService,
+		FileSystemService: NewFileSystemService(defaultUploadWritePath),
 	}
 }
