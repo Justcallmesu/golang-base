@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/response"
-	application_error "justcallmesu.com/rest-api/internal/utils"
+	"justcallmesu.com/rest-api/internal/utils"
 )
 
 type BlogHandler struct {
@@ -27,11 +27,11 @@ func (handler *BlogHandler) FindMany(context *gin.Context) {
 	queryParseError := context.ShouldBindQuery(&blogQuery)
 
 	if queryParseError != nil {
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Terjadi kesalahan", application_error.FormatValidationError(queryParseError)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Terjadi kesalahan", utils.FormatValidationError(queryParseError)))
 		return
 	}
 
-	blogs, findError := handler.BlogService.FindMany(context.Request.Context(), &blogQuery)
+	blogs, findError := handler.BlogService.FindMany(context, &blogQuery)
 
 	if findError != nil {
 		context.JSON(http.StatusInternalServerError, response.NewErrorResponse("Terjadi kesalahan pada server", findError.Error()))
@@ -56,7 +56,7 @@ func (handler *BlogHandler) FindOne(context *gin.Context) {
 		return
 	}
 
-	blog, findError := handler.BlogService.FindOne(context.Request.Context(), parsedId)
+	blog, findError := handler.BlogService.FindOne(context, parsedId)
 
 	if findError != nil {
 		context.JSON(http.StatusInternalServerError, response.NewErrorResponse(findError.Error(), nil))
@@ -70,14 +70,14 @@ func (handler *BlogHandler) Create(context *gin.Context) {
 	var newBlog Blog
 
 	if err := context.ShouldBindJSON(&newBlog); err != nil {
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Data tidak sesuai", application_error.FormatValidationError(err)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Data tidak sesuai", utils.FormatValidationError(err)))
 		return
 	}
 
 	createError := handler.BlogService.CreateOne(context, &newBlog)
 
 	if createError != nil {
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Terjadi kesalahan saat menyimpan", application_error.FormatValidationError(createError)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Terjadi kesalahan saat menyimpan", utils.FormatValidationError(createError)))
 		return
 	}
 
@@ -89,18 +89,35 @@ func (handler *BlogHandler) Update(context *gin.Context) {
 
 	if err := context.ShouldBindJSON(&updatedBlog); err != nil {
 		fmt.Println(err)
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Data tidak sesuai", application_error.FormatValidationError(err)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Data tidak sesuai", utils.FormatValidationError(err)))
 		return
 	}
 
 	updateError := handler.BlogService.UpdateOne(context, &updatedBlog)
 
 	if updateError != nil {
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal saat mengubah", application_error.FormatValidationError(updateError)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal saat mengubah", utils.FormatValidationError(updateError)))
 		return
 	}
 
 	context.JSON(http.StatusAccepted, response.NewResponse("Blog berhasil diedit", true, nil))
+}
+
+func (handler *BlogHandler) Upload(context *gin.Context) {
+	blogId, paramError := utils.GetAndParseParamToInt(context, "id", 10, 32)
+
+	if paramError != nil {
+		context.JSON(http.StatusBadRequest, paramError)
+		return
+	}
+
+	imageUploadError := handler.BlogService.HandleImageUpload(context, int(blogId))
+
+	if imageUploadError != nil {
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal Memproses Upload", errors.New("silahkan upload kembali")))
+		return
+	}
+
 }
 
 func (handler *BlogHandler) Delete(context *gin.Context) {
@@ -121,7 +138,7 @@ func (handler *BlogHandler) Delete(context *gin.Context) {
 
 	if deleteError != nil {
 
-		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal menghapus Blog", application_error.FormatValidationError(deleteError)))
+		context.JSON(http.StatusBadRequest, response.NewErrorResponse("Gagal menghapus Blog", utils.FormatValidationError(deleteError)))
 		return
 	}
 
