@@ -17,5 +17,6 @@ func BlogRoutes(engine *gin.Engine, services *app.Services, middlewares *app.Mid
 	blogRouter.GET("/:id", blogHandler.FindOne)
 	blogRouter.POST("/", blogHandler.Create)
 	blogRouter.PUT("/", blogHandler.Update)
+	blogRouter.POST("/:id/upload", blogHandler.Upload)
 	blogRouter.DELETE("/:id", blogHandler.Delete)
 }
