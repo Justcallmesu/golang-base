@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/api/routes"
@@ -11,10 +12,14 @@ import (
 	"justcallmesu.com/rest-api/internal/database"
 )
 
+const DEFAULT_WRITE_PATH = "uploads"
+
 func main() {
 	config.LoadConfig()
 
 	Engine := gin.Default()
+
+	Engine.Static("public", filepath.Join("/", DEFAULT_WRITE_PATH))
 
 	database := database.InitConnection()
 
