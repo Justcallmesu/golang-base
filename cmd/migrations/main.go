@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	files "justcallmesu.com/rest-api/internal/app/Files"
 	"justcallmesu.com/rest-api/internal/app/blogs"
 	"justcallmesu.com/rest-api/internal/app/users"
 	"justcallmesu.com/rest-api/internal/config"
@@ -19,6 +20,7 @@ func main() {
 		&users.User{},
 		&blogs.Blog{},
 		&blogs.BlogDetails{},
+		&files.Files{},
 	)
 
 	if migrateError != nil {
