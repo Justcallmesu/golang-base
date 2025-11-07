@@ -19,7 +19,7 @@ func main() {
 
 	Engine := gin.Default()
 
-	Engine.Static("public", filepath.Join("/", DEFAULT_WRITE_PATH))
+	Engine.Static("/public", filepath.Join("./public", DEFAULT_WRITE_PATH))
 
 	database := database.InitConnection()
 
