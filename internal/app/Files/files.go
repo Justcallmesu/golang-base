@@ -1,7 +1,6 @@
 package files
 
 import (
-	"gorm.io/datatypes"
 	"justcallmesu.com/rest-api/internal/types"
 )
 
@@ -12,12 +11,19 @@ const (
 	DOCUMENT FileType = "Document"
 )
 
+type Renditions struct {
+	Thumbnail string `json:"thumbnail,omitempty"`
+	Small     string `json:"small,omitempty"`
+	Medium    string `json:"medium,omitempty"`
+	Big       string `json:"big,omitempty"`
+}
+
 type Files struct {
 	types.BaseEntityModel
-	OriginalName string            `json:"originalName"`
-	OriginalUrl  string            `json:"originalUrl"`
-	Renditions   datatypes.JSONMap `json:"renditions"`
-	FileType     FileType          `json:"fileType" gorm:"type:ENUM('Images','Document')"`
+	OriginalName string     `json:"originalName,omitempty"`
+	OriginalUrl  string     `json:"originalUrl,omitempty"`
+	Renditions   Renditions `json:"renditions,omitempty" gorm:"type:json;serializer:json"`
+	FileType     FileType   `json:"fileType,omitempty" gorm:"type:ENUM('Images','Document')"`
 }
 
 type FilesQuery struct {
