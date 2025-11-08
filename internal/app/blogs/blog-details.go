@@ -1,6 +1,7 @@
 package blogs
 
 import (
+	files "justcallmesu.com/rest-api/internal/app/Files"
 	"justcallmesu.com/rest-api/internal/types"
 )
 
@@ -18,5 +19,7 @@ type BlogDetails struct {
 	Blog    Blog            `json:"blog,omitzero"`
 	Content string          `json:"content"`
 	Url     string          `json:"url,omitempty"`
+	FileId  uint            `json:"fileId,omitempty"`
+	File    files.Files     `json:"file,omitzero"`
 	Type    BlogDetailsType `json:"type"`
 }
