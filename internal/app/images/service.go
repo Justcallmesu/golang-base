@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/h2non/bimg"
+	files "justcallmesu.com/rest-api/internal/app/Files"
 	"justcallmesu.com/rest-api/internal/app/system"
 	"justcallmesu.com/rest-api/internal/utils"
 )
@@ -17,12 +18,14 @@ import (
 type ImageUploadService struct {
 	DefaultWritePath string
 	SystemService    *system.SystemService
+	FileService      files.FilesService
 }
 
-func NewImageUploadService(defaultWritePath string, systemService *system.SystemService) *ImageUploadService {
+func NewImageUploadService(defaultWritePath string, systemService *system.SystemService, fileService *files.FilesService) *ImageUploadService {
 	return &ImageUploadService{
 		DefaultWritePath: defaultWritePath,
 		SystemService:    systemService,
+		FileService:      *fileService,
 	}
 }
 
@@ -63,27 +66,33 @@ func (service ImageUploadService) ProcessManyImageUpload(context *gin.Context, f
 
 }
 
-func (service ImageUploadService) ProcessImageUpload(context *gin.Context, fieldName string, resolutions []ImageResolution) error {
+func (service ImageUploadService) ProcessImageUpload(context *gin.Context, fieldName string, resolutions []ImageResolution) (*files.Files, error) {
 
 	multipartFile, formError := context.FormFile(fieldName)
 
 	if formError != nil {
-		return formError
+		return nil, formError
 	}
 
 	buffer, bufferError := service.ParseMultipartFileIntoBuffer(multipartFile)
 
 	if bufferError != nil {
-		return bufferError
+		return nil, bufferError
 	}
 
-	_, imageProcessingError := service.HandleMultiResolutionWrite(buffer, resolutions, multipartFile.Filename)
+	createdFile, imageProcessingError := service.HandleMultiResolutionWrite(buffer, resolutions, multipartFile.Filename)
 
 	if imageProcessingError != nil {
-		return imageProcessingError
+		return nil, imageProcessingError
 	}
 
-	return nil
+	savedFile, fileSaveError := service.FileService.CreateOne(context, createdFile)
+
+	if fileSaveError != nil {
+		return nil, fileSaveError
+	}
+
+	return savedFile, nil
 }
 
 func (service ImageUploadService) ParseMultipartFileIntoBuffer(multipartFile *multipart.FileHeader) ([]byte, error) {
@@ -108,7 +117,32 @@ func (service ImageUploadService) GetFileName(resolution ImageResolution, origin
 	return filepath.Join(fmt.Sprintf("%s-%s.%s", strconv.Itoa(int(resolution)), utils.SlugGenerator(originalFileName), "webp"))
 }
 
-func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte, resolutions []ImageResolution, originalFileName string) ([]ImageResolutionWriteReturn, error) {
+func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte, resolutions []ImageResolution, originalFileName string) (*files.Files, error) {
+	baseDirectorySaveLocation := filepath.Join(service.DefaultWritePath, "webp")
+	baseOriginalFileSaveLocation := filepath.Join(service.DefaultWritePath, "original")
+	fileNameWithoutExtension := strings.Join(strings.Split(originalFileName, ".")[:1], "")
+
+	var createdFile = &files.Files{
+		OriginalName: originalFileName,
+		Renditions:   files.Renditions{},
+		FileType:     files.IMAGE,
+	}
+
+	_, directoryCheckingError := service.SystemService.FileSystemService.CheckIfDirectoryExists(true, baseOriginalFileSaveLocation)
+
+	if directoryCheckingError != nil {
+		return nil, directoryCheckingError
+	}
+
+	originalFileSaveLocation := filepath.Join(baseOriginalFileSaveLocation, originalFileName)
+	writeError := bimg.Write(originalFileSaveLocation, imageBuffer)
+
+	if writeError != nil {
+		return nil, writeError
+	}
+
+	createdFile.OriginalUrl = originalFileSaveLocation
+
 	for _, resolution := range resolutions {
 		bimgOptions := service.GetResizeOptions(resolution)
 
@@ -118,29 +152,33 @@ func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte,
 			return nil, imageProcessingError
 		}
 
-		originalFileName := strings.Join(strings.Split(originalFileName, ".")[:1], "")
+		fileName := service.GetFileName(resolution, fileNameWithoutExtension)
 
-		fileName := service.GetFileName(resolution, originalFileName)
+		fileSaveLocation := filepath.Join(baseDirectorySaveLocation, strconv.Itoa(int(resolution)))
 
-		diskSaveDestination := filepath.Join(service.DefaultWritePath, "webp", strconv.Itoa(int(resolution)))
-
-		isExist, directoryCheckingError := service.SystemService.FileSystemService.CheckIfDirectoryExists(true, diskSaveDestination)
+		_, directoryCheckingError := service.SystemService.FileSystemService.CheckIfDirectoryExists(true, fileSaveLocation)
 
 		if directoryCheckingError != nil {
 			return nil, directoryCheckingError
 		}
 
-		if !isExist {
-			return nil, fmt.Errorf("%s is doesn't exist in the machine", diskSaveDestination)
-		}
+		fileLocation := filepath.Join(fileSaveLocation, fileName)
 
-		writeError := bimg.Write(filepath.Join(diskSaveDestination, fileName), newImage)
+		writeError := bimg.Write(fileLocation, newImage)
 
 		if writeError != nil {
 			return nil, writeError
 		}
 
+		switch resolution {
+		case SMALL:
+			createdFile.Renditions.Small = fileLocation
+		case MEDIUM:
+			createdFile.Renditions.Medium = fileLocation
+		case BIG:
+			createdFile.Renditions.Big = fileLocation
+		}
 	}
 
-	return nil, nil
+	return createdFile, nil
 }
