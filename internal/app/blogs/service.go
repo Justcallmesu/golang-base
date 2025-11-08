@@ -1,21 +1,21 @@
 package blogs
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/rest-api/internal/app/images"
 )
 
 type BlogService struct {
-	BlogRepository *BlogRepository
-	imageService   *images.ImageUploadService
+	BlogRepository        *BlogRepository
+	blogDetailsRepository *BlogDetailsRepository
+	imageService          *images.ImageUploadService
 }
 
-func NewBlogService(blogRepository *BlogRepository, imageService *images.ImageUploadService) *BlogService {
+func NewBlogService(blogRepository *BlogRepository, blogDetailsRepository *BlogDetailsRepository, imageService *images.ImageUploadService) *BlogService {
 	return &BlogService{
-		BlogRepository: blogRepository,
-		imageService:   imageService,
+		BlogRepository:        blogRepository,
+		blogDetailsRepository: blogDetailsRepository,
+		imageService:          imageService,
 	}
 }
 
@@ -43,20 +43,26 @@ func (service *BlogService) UpdateOne(context *gin.Context, updatedBlog *Blog) e
 
 func (service *BlogService) HandleImageUpload(context *gin.Context, blogId int) error {
 
-	processError := service.imageService.ProcessImageUpload(context, "image", []images.ImageResolution{
+	savedFile, processError := service.imageService.ProcessImageUpload(context, "image", []images.ImageResolution{
 		images.BIG,
 		images.MEDIUM,
 		images.SMALL,
 	})
 
-	fmt.Println(processError)
-
 	if processError != nil {
 		return processError
 	}
 
-	return nil
+	newDetail := &BlogDetails{
+		BlogId: uint(blogId),
+		FileId: savedFile.Id,
+		File:   *savedFile,
+		Type:   Image,
+	}
 
+	createError := service.blogDetailsRepository.CreateOne(newDetail, context)
+
+	return createError
 }
 
 func (service *BlogService) DeleteOne(context *gin.Context, targetId int) error {
