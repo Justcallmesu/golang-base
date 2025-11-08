@@ -45,7 +45,7 @@ func (repository *BlogRepository) FindOne(targetId int, context context.Context)
 
 	var blog Blog
 
-	fetchError := repository.sqlDatabaseConnection.WithContext(context).Preload("Details").Preload("Details").First(&blog, targetId).Error
+	fetchError := repository.sqlDatabaseConnection.WithContext(context).Preload("Details").Preload("Details.File").First(&blog, targetId).Error
 
 	if fetchError != nil {
 		return Blog{}, repository.HandleDatabaseError(fetchError)
