@@ -7,8 +7,3 @@ const (
 	MEDIUM = 1280
 	BIG    = 1920
 )
-
-type ImageResolutionWriteReturn struct {
-	Resolution ImageResolution
-	path       string
-}
