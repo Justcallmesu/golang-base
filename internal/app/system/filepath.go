@@ -1,8 +1,6 @@
 package system
 
 import (
-	"errors"
-	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -15,15 +13,11 @@ func NewFileSystemService(defaultUploadWritePath string) *FileSystemService {
 }
 
 func (service FileSystemService) CheckIfDirectoryExists(createDirIfDontExist bool, targetPath string) (bool, error) {
-	var candidatePath = filepath.Join(".", targetPath)
+	var candidatePath = filepath.Join("./", targetPath)
 
 	_, fileCheckingError := os.Stat(candidatePath)
 
-	if errors.Is(fileCheckingError, fs.ErrNotExist) && !createDirIfDontExist {
-		return false, nil
-	}
-
-	if errors.Is(fileCheckingError, fs.ErrNotExist) && createDirIfDontExist {
+	if createDirIfDontExist {
 
 		mkdirError := os.MkdirAll(candidatePath, os.ModePerm)
 
@@ -32,6 +26,10 @@ func (service FileSystemService) CheckIfDirectoryExists(createDirIfDontExist boo
 		}
 
 		return true, nil
+	}
+
+	if os.IsNotExist(fileCheckingError) {
+		return false, nil
 	}
 
 	if fileCheckingError != nil {
