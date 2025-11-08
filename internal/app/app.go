@@ -1,9 +1,6 @@
 package app
 
 import (
-	"os"
-	"path/filepath"
-
 	"gorm.io/gorm"
 	"justcallmesu.com/rest-api/internal/api/middleware"
 	files "justcallmesu.com/rest-api/internal/app/Files"
@@ -13,7 +10,6 @@ import (
 	"justcallmesu.com/rest-api/internal/app/images"
 	"justcallmesu.com/rest-api/internal/app/system"
 	"justcallmesu.com/rest-api/internal/app/users"
-	"justcallmesu.com/rest-api/internal/utils"
 )
 
 type Services struct {
@@ -26,9 +22,10 @@ type Services struct {
 }
 
 type Repositories struct {
-	UserRepository *users.UserRepository
-	BlogRepository *blogs.BlogRepository
-	FileRepository *files.FilesRepository
+	UserRepository        *users.UserRepository
+	BlogRepository        *blogs.BlogRepository
+	blogDetailsRepository *blogs.BlogDetailsRepository
+	FileRepository        *files.FilesRepository
 }
 
 type Middlewares struct {
@@ -37,29 +34,34 @@ type Middlewares struct {
 
 func NewRepositories(database *gorm.DB) *Repositories {
 	userRepository := users.NewUserRepository(database)
+	blogDetailsRepository := blogs.NewBlogDetailsRepository(database)
 	blogRepository := blogs.NewBlogRepository(database)
 	fileRepository := files.NewFilesRepository(database)
 	return &Repositories{
-		UserRepository: userRepository,
-		BlogRepository: blogRepository,
-		FileRepository: fileRepository,
+		UserRepository:        userRepository,
+		BlogRepository:        blogRepository,
+		FileRepository:        fileRepository,
+		blogDetailsRepository: blogDetailsRepository,
 	}
 }
 
-func NewServices(Repositories *Repositories) *Services {
-	DEFAULT_WRITE_PATH := filepath.Clean(utils.GetDefaultValue(os.Getenv("UPLOAD_PATH"), "public/uploads"))
+func NewServices(Repositories *Repositories, defaultWritePath string) *Services {
 
 	/**
 	System Service
 	*/
-	systemService := system.NewSystemService(DEFAULT_WRITE_PATH)
+	systemService := system.NewSystemService(defaultWritePath)
 
-	cookieService := cookies.NewTokenCookieService()
-	jwtService := auth.NewJWTService()
-	imageService := images.NewImageUploadService(DEFAULT_WRITE_PATH, systemService)
-	authService := auth.NewAuthService(Repositories.UserRepository, jwtService, cookieService)
-	blogService := blogs.NewBlogService(Repositories.BlogRepository, imageService)
+	/**
+	Utils Service
+	*/
 	fileService := files.NewFilesService(Repositories.FileRepository)
+	jwtService := auth.NewJWTService()
+	cookieService := cookies.NewTokenCookieService()
+	imageService := images.NewImageUploadService(defaultWritePath, systemService, fileService)
+
+	authService := auth.NewAuthService(Repositories.UserRepository, jwtService, cookieService)
+	blogService := blogs.NewBlogService(Repositories.BlogRepository, Repositories.blogDetailsRepository, imageService)
 
 	return &Services{
 		CookieService: cookieService,
