@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm/schema"
 	"justcallmesu.com/rest-api/internal/api/routes"
 	"justcallmesu.com/rest-api/internal/config"
 	"justcallmesu.com/rest-api/internal/database"
+	"justcallmesu.com/rest-api/internal/serializer"
 )
-
-const DEFAULT_WRITE_PATH = "uploads"
 
 func main() {
 	config.LoadConfig()
 
 	Engine := gin.Default()
 
-	Engine.Static("/public", filepath.Join("./public", DEFAULT_WRITE_PATH))
+	schema.RegisterSerializer("json", serializer.JSONSerializer{})
 
 	database := database.InitConnection()
 
