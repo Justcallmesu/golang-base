@@ -13,12 +13,13 @@ import (
 )
 
 type Services struct {
-	CookieService *cookies.TokenCookieService
-	AuthService   *auth.AuthService
-	JWTService    *auth.JWTService
-	BlogService   *blogs.BlogService
-	SystemService *system.SystemService
-	FileService   *files.FilesService
+	CookieService     *cookies.TokenCookieService
+	AuthService       *auth.AuthService
+	JWTService        *auth.JWTService
+	BlogService       *blogs.BlogService
+	BlogDetailService *blogs.BlogDetailService
+	SystemService     *system.SystemService
+	FileService       *files.FilesService
 }
 
 type Repositories struct {
@@ -62,14 +63,16 @@ func NewServices(Repositories *Repositories, defaultWritePath string) *Services 
 
 	authService := auth.NewAuthService(Repositories.UserRepository, jwtService, cookieService)
 	blogService := blogs.NewBlogService(Repositories.BlogRepository, Repositories.blogDetailsRepository, imageService)
+	blogDetailService := blogs.NewBlogDetailsService(*Repositories.blogDetailsRepository)
 
 	return &Services{
-		CookieService: cookieService,
-		AuthService:   authService,
-		JWTService:    jwtService,
-		BlogService:   blogService,
-		SystemService: systemService,
-		FileService:   fileService,
+		CookieService:     cookieService,
+		AuthService:       authService,
+		JWTService:        jwtService,
+		BlogService:       blogService,
+		SystemService:     systemService,
+		FileService:       fileService,
+		BlogDetailService: blogDetailService,
 	}
 }
 
