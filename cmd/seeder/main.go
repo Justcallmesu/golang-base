@@ -16,23 +16,22 @@ func main() {
 	ctx := context.Background()
 
 	database := database.InitConnection()
-	
+
 	users := []*users.User{
 		{
 			Model: gorm.Model{
-				ID:1,
+				ID: 1,
 			},
 			Username: "justcallmesu",
 			Password: "portfolioAppPasswordForJustcallmesu12361239789$!@#!@#!@*#@!)!",
 		},
 	}
 
-	
 	for _, value := range users {
 		hashError := value.HashPassword()
-		_,deleteError := gorm.G[user.User](database).Where("id = ?", value.ID).Delete(ctx)
+		_, deleteError := gorm.G[user.User](database).Where("id = ?", value.ID).Delete(ctx)
 
-		if(deleteError != nil){
+		if deleteError != nil {
 
 			switch deleteError.Error() {
 			case gorm.ErrRecordNotFound.Error():
