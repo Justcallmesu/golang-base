@@ -18,8 +18,13 @@ type BlogDetails struct {
 	BlogId  uint            `json:"blogId"`
 	Blog    Blog            `json:"blog,omitzero"`
 	Content string          `json:"content"`
-	Url     string          `json:"url,omitempty"`
-	FileId  uint            `json:"fileId,omitempty"`
+	FileId  *uint           `json:"fileId,omitempty"`
 	File    files.Files     `json:"file,omitzero"`
 	Type    BlogDetailsType `json:"type"`
+	Order   uint            `json:"order" binding:"required,number,gte=1" gorm:"not null"`
+}
+
+type UpdateBlogDetailsOrder struct {
+	Id    uint `json:"id" binding:"required,number,gte=1"`
+	Order uint `json:"order" binding:"required,number,gte=1"`
 }
