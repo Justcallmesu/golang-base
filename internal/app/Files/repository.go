@@ -21,23 +21,23 @@ func NewFilesRepository(database *gorm.DB) *FilesRepository {
 func (repository FilesRepository) FindAll(query FilesQuery, context context.Context) (*[]Files, error) {
 	var fetchedFiles []Files
 
-	queryBuilder := repository.database.WithContext(context)
+	qb := repository.database.WithContext(context)
 
 	if query.Search != "" {
 		searchValue := "%" + query.Search + "%"
-
-		queryBuilder.Where("originalName LIKE ?", searchValue)
+		qb = qb.Where("original_name LIKE ?", searchValue)
 	}
 
 	if query.OrderBy != "" && query.SortBy != "" {
 		orderValue := fmt.Sprintf("%s %s", query.OrderBy, query.SortBy)
-
-		queryBuilder.Order(orderValue)
+		qb = qb.Order(orderValue)
 	}
 
-	queryBuilder.Limit(query.Limit).Offset(query.Limit * query.Page)
+	// Page is 1-based (per binding) so offset should be (page-1)*limit
+	offset := query.Limit * (query.Page - 1)
+	qb = qb.Limit(query.Limit).Offset(offset)
 
-	fetchError := queryBuilder.Find(&fetchedFiles).Error
+	fetchError := qb.Find(&fetchedFiles).Error
 
 	return &fetchedFiles, fetchError
 }
