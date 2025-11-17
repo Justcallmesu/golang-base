@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/h2non/bimg"
@@ -114,13 +115,19 @@ func (service ImageUploadService) ParseMultipartFileIntoBuffer(multipartFile *mu
 }
 
 func (service ImageUploadService) GetFileName(resolution ImageResolution, originalFileName string) string {
-	return filepath.Join(fmt.Sprintf("%s-%s.%s", strconv.Itoa(int(resolution)), utils.SlugGenerator(originalFileName), "webp"))
+	// originalFileName is expected to already be slugified/sanitized and may include a unique suffix
+	return fmt.Sprintf("%s-%s.%s", strconv.Itoa(int(resolution)), originalFileName, "webp")
 }
 
 func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte, resolutions []ImageResolution, originalFileName string) (*files.Files, error) {
 	baseDirectorySaveLocation := filepath.Join(service.DefaultWritePath, "webp")
 	baseOriginalFileSaveLocation := filepath.Join(service.DefaultWritePath, "original")
-	fileNameWithoutExtension := strings.Join(strings.Split(originalFileName, ".")[:1], "")
+	// sanitize and derive a safe, unique base name for the file
+	baseName := filepath.Base(originalFileName)
+	nameWithoutExt := strings.TrimSuffix(baseName, filepath.Ext(baseName))
+	safeName := utils.SlugGenerator(nameWithoutExt)
+	uniqueSuffix := strconv.FormatInt(time.Now().UnixNano(), 10)
+	fileNameWithoutExtension := fmt.Sprintf("%s-%s", safeName, uniqueSuffix)
 
 	var createdFile = &files.Files{
 		OriginalName: originalFileName,
@@ -134,7 +141,10 @@ func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte,
 		return nil, directoryCheckingError
 	}
 
-	originalFileSaveLocation := filepath.Join(baseOriginalFileSaveLocation, originalFileName)
+	// write original with a safe, unique filename to avoid collisions and path traversal
+	originalExt := filepath.Ext(baseName)
+	originalFileNameSafe := fmt.Sprintf("%s%s", fileNameWithoutExtension, originalExt)
+	originalFileSaveLocation := filepath.Join(baseOriginalFileSaveLocation, originalFileNameSafe)
 	writeError := bimg.Write(originalFileSaveLocation, imageBuffer)
 
 	if writeError != nil {
