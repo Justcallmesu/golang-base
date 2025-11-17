@@ -55,7 +55,7 @@ func (service *BlogService) HandleImageUpload(context *gin.Context, blogId int) 
 
 	newDetail := &BlogDetails{
 		BlogId: uint(blogId),
-		FileId: savedFile.Id,
+		FileId: &savedFile.Id,
 		File:   *savedFile,
 		Type:   Image,
 	}
