@@ -22,21 +22,23 @@ func (repository *BlogRepository) FindMany(parameter *BlogQuery, context context
 
 	var blogs []Blog
 
-	queryBuilder := repository.sqlDatabaseConnection.WithContext(context)
+	qb := repository.sqlDatabaseConnection.WithContext(context)
 
 	if parameter.Search != "" {
 		searchValue := "%" + parameter.Search + "%"
-		queryBuilder.Where("Title Like ?", searchValue)
+		qb = qb.Where("Title LIKE ?", searchValue)
 	}
 
 	if parameter.OrderBy != "" && parameter.SortBy != "" {
 		orderValue := fmt.Sprintf("%s %s", parameter.OrderBy, parameter.SortBy)
-		queryBuilder.Order(orderValue)
+		qb = qb.Order(orderValue)
 	}
 
-	queryBuilder.Limit(parameter.Limit).Offset(parameter.Limit * parameter.Page)
+	// Page is expected to be 1-based in QueryParams. Offset should be (page-1)*limit.
+	offset := parameter.Limit * (parameter.Page - 1)
+	qb = qb.Limit(parameter.Limit).Offset(offset)
 
-	fetchError := queryBuilder.Find(&blogs).Error
+	fetchError := qb.Find(&blogs).Error
 
 	return &blogs, fetchError
 }
@@ -51,7 +53,7 @@ func (repository *BlogRepository) FindOne(targetId int, context context.Context)
 		return Blog{}, repository.HandleDatabaseError(fetchError)
 	}
 
-	return blog, (repository.HandleDatabaseError(fetchError))
+	return blog, nil
 }
 
 func (repository *BlogRepository) CreateOne(newBlog *Blog, context context.Context) error {
@@ -103,7 +105,7 @@ func (repository *BlogRepository) DeleteOne(targetId int, context context.Contex
 	return repository.HandleDatabaseError(transaction.Commit().Error)
 }
 
-func (repositorry *BlogRepository) HandleDatabaseError(databaseError error) error {
+func (repository *BlogRepository) HandleDatabaseError(databaseError error) error {
 	if databaseError == nil {
 		return nil
 	}
