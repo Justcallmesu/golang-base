@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/h2non/bimg"
 	files "justcallmesu.com/rest-api/internal/app/Files"
 	"justcallmesu.com/rest-api/internal/app/system"
@@ -122,11 +122,11 @@ func (service ImageUploadService) GetFileName(resolution ImageResolution, origin
 func (service ImageUploadService) HandleMultiResolutionWrite(imageBuffer []byte, resolutions []ImageResolution, originalFileName string) (*files.Files, error) {
 	baseDirectorySaveLocation := filepath.Join(service.DefaultWritePath, "webp")
 	baseOriginalFileSaveLocation := filepath.Join(service.DefaultWritePath, "original")
-	// sanitize and derive a safe, unique base name for the file
+
 	baseName := filepath.Base(originalFileName)
 	nameWithoutExt := strings.TrimSuffix(baseName, filepath.Ext(baseName))
 	safeName := utils.SlugGenerator(nameWithoutExt)
-	uniqueSuffix := strconv.FormatInt(time.Now().UnixNano(), 10)
+	uniqueSuffix := uuid.New().String()
 	fileNameWithoutExtension := fmt.Sprintf("%s-%s", safeName, uniqueSuffix)
 
 	var createdFile = &files.Files{
