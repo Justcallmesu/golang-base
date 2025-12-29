@@ -1,4 +1,4 @@
-package auth
+package tokens
 
 import (
 	"fmt"
@@ -7,6 +7,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+)
+
+type TokenType int
+
+const (
+	AccessTokenType = iota
+	RefreshTokenType
 )
 
 type JWTClaims struct {
