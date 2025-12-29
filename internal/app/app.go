@@ -2,16 +2,17 @@ package app
 
 import (
 	"gorm.io/gorm"
-	"justcallmesu.com/rest-api/internal/api/middleware"
-	"justcallmesu.com/rest-api/internal/app/auth"
-	"justcallmesu.com/rest-api/internal/app/cookies"
-	"justcallmesu.com/rest-api/internal/app/users"
+	"justcallmesu.com/golang-base/internal/api/middleware"
+	"justcallmesu.com/golang-base/internal/app/auth"
+	"justcallmesu.com/golang-base/internal/app/cookies"
+	"justcallmesu.com/golang-base/internal/app/tokens"
+	"justcallmesu.com/golang-base/internal/app/users"
 )
 
 type Services struct {
 	CookieService *cookies.TokenCookieService
-	AuthService   *auth.AuthService
-	JWTService    *auth.JWTService
+	AuthService   *auth.Service
+	JWTService    *tokens.JWTService
 }
 
 type Repositories struct {
@@ -32,8 +33,8 @@ func NewRepositories(database *gorm.DB) *Repositories {
 
 func NewServices(Repositories *Repositories) *Services {
 	cookieService := cookies.NewTokenCookieService()
-	jwtService := auth.NewJWTService()
-	authService := auth.NewAuthService(Repositories.UserRepository,jwtService, cookieService)
+	jwtService := tokens.NewJWTService()
+	authService := auth.NewService(Repositories.UserRepository, jwtService, cookieService)
 
 	return &Services{
 		CookieService: cookieService,
@@ -41,7 +42,6 @@ func NewServices(Repositories *Repositories) *Services {
 		JWTService:    jwtService,
 	}
 }
-
 
 func NewMiddlewares(Services *Services) *Middlewares {
 	return &Middlewares{

@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/app/auth"
+	"justcallmesu.com/golang-base/internal/app/tokens"
 )
 
-func GetUserData(context *gin.Context) (*auth.JWTClaims, error) {
+func GetUserData(context *gin.Context) (*tokens.JWTClaims, error) {
 	claims, isExist := context.Get("UserData")
 
 	if !isExist {
 		return nil, fmt.Errorf("unauthorized, please login")
 	}
 
-	return claims.(*auth.JWTClaims), nil
+	return claims.(*tokens.JWTClaims), nil
 }

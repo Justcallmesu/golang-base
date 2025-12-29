@@ -6,16 +6,17 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/api/response"
-	"justcallmesu.com/rest-api/internal/app/auth"
+	"justcallmesu.com/golang-base/internal/api/response"
+	"justcallmesu.com/golang-base/internal/app/auth"
+	"justcallmesu.com/golang-base/internal/app/tokens"
 )
 
 type AuthMiddleware struct {
-	AuthService *auth.AuthService
-	JWTService  *auth.JWTService
+	AuthService *auth.Service
+	JWTService  *tokens.JWTService
 }
 
-func NewAuthMiddleware(authService *auth.AuthService, jwtService *auth.JWTService) *AuthMiddleware {
+func NewAuthMiddleware(authService *auth.Service, jwtService *tokens.JWTService) *AuthMiddleware {
 	return &AuthMiddleware{
 		AuthService: authService,
 		JWTService:  jwtService,
@@ -24,7 +25,7 @@ func NewAuthMiddleware(authService *auth.AuthService, jwtService *auth.JWTServic
 
 func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var claims *auth.JWTClaims
+		var claims *tokens.JWTClaims
 		var claimsError, regenerateError error
 
 		tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_ACCESS_TOKEN"))
@@ -33,8 +34,8 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 			regenerateError = middleware.AuthService.RegenerateAccessToken(context)
 
 		} else {
-			claims, claimsError = middleware.JWTService.ParseToken(tokenString, auth.AccessTokenType)
-				fmt.Println(tokenString)
+			claims, claimsError = middleware.JWTService.ParseToken(tokenString, tokens.AccessTokenType)
+			fmt.Println(tokenString)
 
 			if claimsError != nil {
 				regenerateError = middleware.AuthService.RegenerateAccessToken(context)

@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/api/routes"
-	"justcallmesu.com/rest-api/internal/config"
-	"justcallmesu.com/rest-api/internal/database"
+	"justcallmesu.com/golang-base/internal/api/routes"
+	"justcallmesu.com/golang-base/internal/config"
+	"justcallmesu.com/golang-base/internal/database"
 )
 
 func main() {

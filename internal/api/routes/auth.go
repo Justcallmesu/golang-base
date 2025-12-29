@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/app"
-	"justcallmesu.com/rest-api/internal/app/auth"
+	"justcallmesu.com/golang-base/internal/app"
+	"justcallmesu.com/golang-base/internal/app/auth"
 )
 
 func AuthRoutes(engine *gin.Engine, services *app.Services, middlewares *app.Middlewares) {

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"justcallmesu.com/rest-api/internal/api/response"
+	"justcallmesu.com/golang-base/internal/api/response"
 )
 
 func FormatValidationError(passedError error) []response.APIValidationError {

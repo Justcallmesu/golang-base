@@ -6,26 +6,26 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"justcallmesu.com/rest-api/internal/app/cookies"
-	"justcallmesu.com/rest-api/internal/app/tokens"
-	"justcallmesu.com/rest-api/internal/app/users"
+	"justcallmesu.com/golang-base/internal/app/cookies"
+	"justcallmesu.com/golang-base/internal/app/tokens"
+	"justcallmesu.com/golang-base/internal/app/users"
 )
 
-type AuthService struct {
+type Service struct {
 	UserRepository *users.UserRepository
 	JwtService     *tokens.JWTService
 	CookieService  *cookies.TokenCookieService
 }
 
-func NewAuthService(repository *users.UserRepository, jwtService *tokens.JWTService, cookieService *cookies.TokenCookieService) *AuthService {
-	return &AuthService{
+func NewService(repository *users.UserRepository, jwtService *tokens.JWTService, cookieService *cookies.TokenCookieService) *Service {
+	return &Service{
 		UserRepository: repository,
 		JwtService:     jwtService,
 		CookieService:  cookieService,
 	}
 }
 
-func (service *AuthService) Login(context context.Context, credentials *LoginUser) (*cookies.TokenCookie, error) {
+func (service *Service) Login(context context.Context, credentials *LoginUser) (*cookies.TokenCookie, error) {
 	foundUser, loginError := service.UserRepository.FindUserByUsername(credentials.Username, context)
 
 	if loginError != nil {
@@ -53,13 +53,13 @@ func (service *AuthService) Login(context context.Context, credentials *LoginUse
 	return cookies.NewTokenCookie(refreshToken, accessToken), nil
 }
 
-func (service *AuthService) IsRefreshTokenExist(context *gin.Context) (bool, string) {
+func (service *Service) IsRefreshTokenExist(context *gin.Context) (bool, string) {
 	tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_REFRESH_TOKEN"))
 
 	return tokenError == nil, tokenString
 }
 
-func (service *AuthService) RegenerateAccessToken(context *gin.Context) error {
+func (service *Service) RegenerateAccessToken(context *gin.Context) error {
 	var claims *tokens.JWTClaims
 	var claimsError error
 

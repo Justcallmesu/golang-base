@@ -1,9 +1,9 @@
 package main
 
 import (
-	"justcallmesu.com/rest-api/internal/app/users"
-	"justcallmesu.com/rest-api/internal/config"
-	"justcallmesu.com/rest-api/internal/database"
+	"justcallmesu.com/golang-base/internal/app/users"
+	"justcallmesu.com/golang-base/internal/config"
+	"justcallmesu.com/golang-base/internal/database"
 )
 
 func main() {
