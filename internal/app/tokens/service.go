@@ -1,4 +1,4 @@
-package auth
+package tokens
 
 import (
 	"errors"
@@ -8,13 +8,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-)
-
-type TokenType int
-
-const (
-	AccessTokenType = iota
-	RefreshTokenType
 )
 
 type JWTService struct {
@@ -53,7 +46,6 @@ func (service *JWTService) GenerateToken(userId uint, username string, tokenType
 	var signedToken, secret string
 	var expiresAt *jwt.NumericDate
 
-
 	switch tokenType {
 	case AccessTokenType:
 		expiresAt = jwt.NewNumericDate(time.Now().Add(service.accessTokenExpiration))
@@ -70,8 +62,8 @@ func (service *JWTService) GenerateToken(userId uint, username string, tokenType
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: expiresAt,
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			Issuer:   "justcallmesu",
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "justcallmesu",
 		},
 	}
 
