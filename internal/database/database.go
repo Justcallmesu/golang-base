@@ -1,5 +1,8 @@
 package database
 
-import "database/sql"
+type DatabaseType string
 
-type TableInitializer func(database *sql.DB, channel chan bool)
+const (
+	MySQL    DatabaseType = "mysql"
+	Postgres DatabaseType = "postgres"
+)
