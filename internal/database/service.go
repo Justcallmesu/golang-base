@@ -25,6 +25,7 @@ func InitConnection() *gorm.DB {
 		panic("Unsupported database type, supported types are: mysql, postgres")
 	}
 
+	fmt.Println("Database Connected Successfully")
 	return database
 }
 
@@ -54,7 +55,6 @@ func ConnectPostgres() *gorm.DB {
 
 func GetDatabaseDSN() string {
 	databaseUser := default_value.GetDefaultValue(os.Getenv("DB_USER"), "root")
-	databasePassword := default_value.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
 	databaseHost := default_value.GetDefaultValue(os.Getenv("DB_HOST"), "localhost")
 	databasePort := default_value.GetDefaultValue(os.Getenv("DB_PORT"), "3306")
 	databaseName := default_value.GetDefaultValue(os.Getenv("DB_NAME"), "golang_base")
@@ -63,6 +63,7 @@ func GetDatabaseDSN() string {
 
 	switch databaseType {
 	case MySQL:
+		databasePassword := default_value.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
 		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 			databaseUser,
 			databasePassword,
@@ -71,6 +72,7 @@ func GetDatabaseDSN() string {
 			databaseName,
 		)
 	case Postgres:
+		databasePassword := default_value.GetDefaultValue(os.Getenv("DB_PASSWORD"), "''")
 		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			databaseHost,
 			databasePort,
