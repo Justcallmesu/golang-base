@@ -10,8 +10,8 @@ build:
 	go build -o bin/server ./cmd/server/main.go
 
 seed:
-	go run ./cmd/seed/main.go
+	go run ./cmd/seeder/main.go
 
 migrate:
-	go run ./cmd/migrate/main.go
+	go run ./cmd/migrations/main.go
 	
