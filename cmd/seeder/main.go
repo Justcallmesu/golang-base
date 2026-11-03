@@ -1,9 +1,13 @@
 package main
 
 import (
-	"justcallmesu.com/golang-base/internal/app/users"
+	"os"
+	"time"
+
+	"github.com/charmbracelet/log"
 	"justcallmesu.com/golang-base/internal/config"
 	"justcallmesu.com/golang-base/internal/database"
+	"justcallmesu.com/golang-base/internal/database/seeds"
 )
 
 func main() {
@@ -11,21 +15,30 @@ func main() {
 	config.LoadConfig()
 
 	database := database.InitConnection()
+	defer func() {
 
-	users := []*users.User{
-		{
-			Username: "",
-			Password: "",
-		},
-	}
+		sqlDB, sqlDbError := database.DB()
 
-	for _, value := range users {
-		hashError := value.HashPassword()
-
-		if hashError != nil {
-			panic("Error hashing password: " + hashError.Error())
+		if sqlDbError != nil {
+			panic(sqlDbError)
 		}
-	}
 
-	database.Create(users)
+		sqlDbError = sqlDB.Close()
+
+		if sqlDbError != nil {
+			panic(sqlDbError)
+		}
+	}()
+
+	logger := log.NewWithOptions(os.Stderr, log.Options{
+		ReportCaller:    false,
+		ReportTimestamp: true,
+		TimeFormat:      time.StampMilli,
+	})
+
+	seeds.PermissionSeeder(database, logger)
+	seeds.RoleSeeder(database, logger)
+	seeds.RolePermissionSeeder(database, logger)
+	seeds.UserSeeder(database, logger)
+
 }

@@ -3,20 +3,30 @@ package app
 import (
 	"gorm.io/gorm"
 	"justcallmesu.com/golang-base/internal/api/middleware"
-	"justcallmesu.com/golang-base/internal/app/auth"
-	"justcallmesu.com/golang-base/internal/app/cookies"
-	"justcallmesu.com/golang-base/internal/app/tokens"
-	"justcallmesu.com/golang-base/internal/app/users"
+	role_repository "justcallmesu.com/golang-base/internal/app/repositories/role"
+	user_repository "justcallmesu.com/golang-base/internal/app/repositories/user"
+	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
+	cookies_service "justcallmesu.com/golang-base/internal/app/services/cookie"
+	navigation_menu_service "justcallmesu.com/golang-base/internal/app/services/navigation-menu"
+	role_service "justcallmesu.com/golang-base/internal/app/services/role"
+	tokens "justcallmesu.com/golang-base/internal/app/services/token"
+	user_service "justcallmesu.com/golang-base/internal/app/services/user"
 )
 
 type Services struct {
-	CookieService *cookies.TokenCookieService
-	AuthService   *auth.Service
-	JWTService    *tokens.JWTService
+	CookieService         *cookies_service.Service
+	AuthService           *auth_service.Service
+	JWTService            *tokens.Service
+	NavigationMenuService *navigation_menu_service.Service
+
+	UserService *user_service.Service
+
+	RoleService *role_service.Service
 }
 
 type Repositories struct {
-	UserRepository *users.UserRepository
+	UserRepository *user_repository.UserRepository
+	RoleRepository *role_repository.Repository
 }
 
 type Middlewares struct {
@@ -24,22 +34,34 @@ type Middlewares struct {
 }
 
 func NewRepositories(database *gorm.DB) *Repositories {
-	userRepository := users.NewUserRepository(database)
+	userRepository := user_repository.NewUserRepository(database)
+	roleRepository := role_repository.NewRepository(database)
 
 	return &Repositories{
 		UserRepository: userRepository,
+		RoleRepository: roleRepository,
 	}
 }
 
 func NewServices(Repositories *Repositories) *Services {
-	cookieService := cookies.NewTokenCookieService()
-	jwtService := tokens.NewJWTService()
-	authService := auth.NewService(Repositories.UserRepository, jwtService, cookieService)
+	cookieService := cookies_service.NewService()
+	jwtService := tokens.NewService()
+	navigationMenuService := navigation_menu_service.NewService()
+	authService := auth_service.NewService(Repositories.UserRepository, jwtService, cookieService, navigationMenuService)
+
+	// User Service
+	userService := user_service.NewService(Repositories.UserRepository)
+
+	// Role Service
+	roleService := role_service.NewService(Repositories.RoleRepository)
 
 	return &Services{
-		CookieService: cookieService,
-		AuthService:   authService,
-		JWTService:    jwtService,
+		CookieService:         cookieService,
+		AuthService:           authService,
+		JWTService:            jwtService,
+		NavigationMenuService: navigationMenuService,
+		UserService:           userService,
+		RoleService:           roleService,
 	}
 }
 

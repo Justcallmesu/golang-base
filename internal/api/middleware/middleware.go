@@ -1,22 +1,22 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/api/response"
-	"justcallmesu.com/golang-base/internal/app/auth"
-	"justcallmesu.com/golang-base/internal/app/tokens"
+	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
+	token_service "justcallmesu.com/golang-base/internal/app/services/token"
+	"justcallmesu.com/golang-base/internal/common/types"
 )
 
 type AuthMiddleware struct {
-	AuthService *auth.Service
-	JWTService  *tokens.JWTService
+	AuthService *auth_service.Service
+	JWTService  *token_service.Service
 }
 
-func NewAuthMiddleware(authService *auth.Service, jwtService *tokens.JWTService) *AuthMiddleware {
+func NewAuthMiddleware(authService *auth_service.Service, jwtService *token_service.Service) *AuthMiddleware {
 	return &AuthMiddleware{
 		AuthService: authService,
 		JWTService:  jwtService,
@@ -25,24 +25,23 @@ func NewAuthMiddleware(authService *auth.Service, jwtService *tokens.JWTService)
 
 func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 	return func(context *gin.Context) {
-		var claims *tokens.JWTClaims
-		var claimsError, regenerateError error
+		var claims *types.JWTClaims
+		var regenerateError, claimsParseError error
 
-		tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_ACCESS_TOKEN"))
+		accessTokenString, tokenError := context.Cookie(os.Getenv("COOKIE_ACCESS_TOKEN"))
 
 		if tokenError != nil {
-			regenerateError = middleware.AuthService.RegenerateAccessToken(context)
-
-		} else {
-			claims, claimsError = middleware.JWTService.ParseToken(tokenString, tokens.AccessTokenType)
-			fmt.Println(tokenString)
-
-			if claimsError != nil {
-				regenerateError = middleware.AuthService.RegenerateAccessToken(context)
-			}
+			accessTokenString, regenerateError = middleware.AuthService.RegenerateAccessToken(context)
 		}
 
-		if regenerateError != nil || claimsError != nil {
+		if regenerateError != nil {
+			context.AbortWithStatusJSON(http.StatusUnauthorized, response.NewResponse("unauthorized", false, nil))
+			return
+		}
+
+		claims, claimsParseError = middleware.JWTService.ParseToken(accessTokenString, types.AccessTokenType)
+
+		if claimsParseError != nil {
 			context.AbortWithStatusJSON(http.StatusUnauthorized, response.NewResponse("unauthorized", false, nil))
 			return
 		}

@@ -3,17 +3,21 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/app"
-	"justcallmesu.com/golang-base/internal/app/auth"
+	auth_handler "justcallmesu.com/golang-base/internal/app/handlers/auth"
 )
 
-func AuthRoutes(engine *gin.Engine, services *app.Services, middlewares *app.Middlewares) {
+func AuthRoutes(router *gin.RouterGroup, services *app.Services, middlewares *app.Middlewares) {
 
-	authRouter := engine.Group("/auth")
+	authRouter := router.Group("/auth")
 
 	//Handler
-	authHandler := auth.NewAuthHandler(services.AuthService, services.CookieService)
+	authHandler := auth_handler.NewAuthHandler(services.AuthService, services.CookieService)
 
 	// Routes
 	authRouter.POST("/login", authHandler.Login)
-	authRouter.GET("/logout", middlewares.AuthMiddleware.EnsureSessionIsValid(), authHandler.Logout)
+
+	authRouter.Use(middlewares.AuthMiddleware.EnsureSessionIsValid())
+	authRouter.GET("/me", authHandler.Me)
+	authRouter.PATCH("/change-password", authHandler.ChangePassword)
+	authRouter.POST("/logout", authHandler.Logout)
 }

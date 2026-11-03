@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"justcallmesu.com/golang-base/internal/app/models"
 	"justcallmesu.com/golang-base/internal/utils/default_value"
 )
 
@@ -83,4 +84,22 @@ func GetDatabaseDSN() string {
 	default:
 		panic("Unsupported database type, supported types are: mysql, postgres")
 	}
+}
+
+func Migrations(database *gorm.DB) {
+
+	fmt.Println("Running migrations...")
+
+	migrateError := database.AutoMigrate(
+		&models.Permission{},
+		&models.Role{},
+		&models.User{},
+	)
+
+	if migrateError != nil {
+		panic("Error migrating database: " + migrateError.Error())
+	}
+
+	fmt.Println("Migrations completed.")
+
 }

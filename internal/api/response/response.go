@@ -12,7 +12,6 @@ type Response struct {
 
 type ErrorResponse struct {
 	BaseResponse
-
 	Errors any `json:"errors,omitempty"`
 }
 

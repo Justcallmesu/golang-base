@@ -7,7 +7,7 @@ prod:
 	./bin/server
 
 build:
-	go build -o bin/server ./cmd/server/main.go
+	go build -o bin/server ./cmd/server/main.go && ./bin/server
 
 seed:
 	go run ./cmd/seeder/main.go

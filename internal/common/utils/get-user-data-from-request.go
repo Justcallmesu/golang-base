@@ -1,0 +1,18 @@
+package utils
+
+import (
+	"fmt"
+
+	"github.com/gin-gonic/gin"
+	"justcallmesu.com/golang-base/internal/common/types"
+)
+
+func GetUserData(context *gin.Context) (*types.JWTClaims, error) {
+	claims, isExist := context.Get("UserData")
+
+	if !isExist || claims == nil {
+		return nil, fmt.Errorf("unauthorized, please login")
+	}
+
+	return claims.(*types.JWTClaims), nil
+}
