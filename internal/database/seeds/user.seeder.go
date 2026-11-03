@@ -1,6 +1,9 @@
 package seeds
 
 import (
+	"errors"
+	"os"
+
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -33,6 +36,16 @@ func UserSeeder(database *gorm.DB, logger *log.Logger) {
 			logger.Warnf("Seeding user %s", userSeeder.Username)
 
 			var user models.User = *userSeeder.User
+
+			if user.Username == "admin" {
+				password, err := HandleAdminPassword(user.Password)
+				if err != nil {
+					logger.Errorf("Error handling admin password: %v", err)
+					continue
+				}
+				user.Password = password
+			}
+
 			if err := user.SetPassword(user.Password); err != nil {
 				logger.Errorf("Error hashing password for %s: %v", user.Username, err)
 				continue
@@ -80,4 +93,17 @@ func UserSeeder(database *gorm.DB, logger *log.Logger) {
 
 	logger.Info("User Seed Finished...")
 
+}
+
+func HandleAdminPassword(defaultPassword string) (string, error) {
+	password := os.Getenv("SEED_ADMIN_PASSWORD")
+
+	if password == "" && os.Getenv("APP_ENV") == "production" {
+		return "", errors.New("SEED_ADMIN_PASSWORD is required in production")
+	} else if password == "" {
+		log.Warn("SEED_ADMIN_PASSWORD is not set, using default password for admin user")
+		password = defaultPassword
+	}
+
+	return password, nil
 }
