@@ -8,7 +8,7 @@ import (
 	"justcallmesu.com/golang-base/internal/api/response"
 	auth_dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
-	cookies_service "justcallmesu.com/golang-base/internal/app/services/cookie"
+	cookies_service "justcallmesu.com/golang-base/internal/api/cookie"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 

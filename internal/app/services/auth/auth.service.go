@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	cookies_service "justcallmesu.com/golang-base/internal/api/cookie"
 	dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	cookie_dtos "justcallmesu.com/golang-base/internal/app/dtos/cookie"
 	"justcallmesu.com/golang-base/internal/app/models"
 	user_repository "justcallmesu.com/golang-base/internal/app/repositories/user"
-	cookies_service "justcallmesu.com/golang-base/internal/app/services/cookie"
 	navigation_menu_service "justcallmesu.com/golang-base/internal/app/services/navigation-menu"
 	token_service "justcallmesu.com/golang-base/internal/app/services/token"
 	"justcallmesu.com/golang-base/internal/common/apperror"
