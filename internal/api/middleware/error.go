@@ -27,7 +27,7 @@ func ErrorHandler() gin.HandlerFunc {
 		}
 
 		if appErr.Kind == apperror.KindInternal {
-			slog.Error("[Error] %s %s: %v", c.Request.Method, c.FullPath(), err)
+			slog.Error("internal error", "method", c.Request.Method, "path", c.FullPath(), "error", err)
 		}
 
 		c.JSON(statusOf(appErr.Kind), response.NewErrorResponse(appErr.Message, appErr.Details))
