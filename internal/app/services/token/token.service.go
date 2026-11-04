@@ -64,7 +64,7 @@ func (service *Service) GenerateToken(userId types.UUID, username string, tokenT
 		expiresAt = jwt.NewNumericDate(time.Now().Add(service.refreshTokenExpiration))
 		secret = service.refreshTokenSecret
 	default:
-		return "", apperror.Unauthorized(fmt.Sprintf("invalid token type: %s", tokenType))
+		return "", apperror.Internal(errors.New("invalid token type"))
 	}
 
 	claims := service.NewJwtClaims(userId, username, service.issuer, expiresAt.Time)
@@ -73,7 +73,7 @@ func (service *Service) GenerateToken(userId types.UUID, username string, tokenT
 	signedToken, generateError = token.SignedString([]byte(secret))
 
 	if generateError != nil {
-		return "", apperror.Unauthorized("failed to sign the token")
+		return "", apperror.Internal(generateError)
 	}
 	return signedToken, nil
 }
@@ -95,14 +95,18 @@ func (service *Service) ParseToken(tokenString string, tokenType types.TokenType
 		case types.RefreshTokenType:
 			return []byte(service.refreshTokenSecret), nil
 		}
-		return nil, apperror.Unauthorized(fmt.Sprintf("invalid token type: %s", tokenType))
+		return nil, apperror.Internal(errors.New("invalid token type"))
 	})
 
 	if parseError != nil {
+		if apperror.IsKind(parseError, apperror.KindInternal) {
+			return nil, parseError
+		}
+
 		if errors.Is(parseError, jwt.ErrTokenExpired) {
 			return nil, apperror.Unauthorized("token has expired, please relogin")
 		}
-		return nil, parseError
+		return nil, apperror.Unauthorized("invalid token")
 	}
 
 	if !token.Valid {
