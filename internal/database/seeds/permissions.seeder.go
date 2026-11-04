@@ -14,7 +14,7 @@ var Permissions = []models.Permission{
 		Description:    "Permission to create a new user",
 	},
 	{
-		PermissionCode: models.PERMISSION_EDIT_USER,
+		PermissionCode: models.PERMISSION_UPDATE_USER,
 		Group:          "User Management",
 		Description:    "Permission to edit an existing user",
 	},
@@ -34,7 +34,7 @@ var Permissions = []models.Permission{
 		Description:    "Permission to create a new role",
 	},
 	{
-		PermissionCode: models.PERMISSION_EDIT_ROLE,
+		PermissionCode: models.PERMISSION_UPDATE_ROLE,
 		Group:          "Role Management",
 		Description:    "Permission to edit an existing role",
 	},
