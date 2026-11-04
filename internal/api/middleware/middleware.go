@@ -6,9 +6,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/api/response"
+	"justcallmesu.com/golang-base/internal/app/models"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
 	token_service "justcallmesu.com/golang-base/internal/app/services/token"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
+	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 type AuthMiddleware struct {
@@ -47,6 +50,35 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 		}
 
 		context.Set("UserData", claims)
+
+		context.Next()
+	}
+}
+
+func (middleware *AuthMiddleware) RequirePermission(code models.PermissionCodeEnum) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		parsedClaims, err := utils.GetUserData(context)
+
+		if err != nil {
+			context.Error(apperror.Unauthorized("Unauthorized access"))
+			context.Abort()
+			return
+		}
+
+		hasPermission, err := middleware.AuthService.HasPermission(context.Request.Context(), parsedClaims.UserID, code)
+
+		if err != nil {
+			context.Error(err)
+			context.Abort()
+			return
+		}
+
+		if !hasPermission {
+			context.Error(apperror.Forbidden("You do not have permission to perform this action"))
+			context.Abort()
+
+			return
+		}
 
 		context.Next()
 	}
