@@ -1,4 +1,4 @@
-package default_value
+package utils
 
 func GetDefaultValue[T comparable](value T, defaultValue T) T {
 	if value == *new(T) {

@@ -10,11 +10,11 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"justcallmesu.com/golang-base/internal/app/models"
-	"justcallmesu.com/golang-base/internal/utils/default_value"
+	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 func InitConnection() *gorm.DB {
-	databaseType := DatabaseType(default_value.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
+	databaseType := DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
 
 	var database *gorm.DB
 
@@ -56,16 +56,16 @@ func ConnectPostgres() *gorm.DB {
 }
 
 func GetDatabaseDSN() string {
-	databaseUser := default_value.GetDefaultValue(os.Getenv("DB_USER"), "root")
-	databaseHost := default_value.GetDefaultValue(os.Getenv("DB_HOST"), "localhost")
-	databasePort := default_value.GetDefaultValue(os.Getenv("DB_PORT"), "3306")
-	databaseName := default_value.GetDefaultValue(os.Getenv("DB_NAME"), "golang_base")
+	databaseUser := utils.GetDefaultValue(os.Getenv("DB_USER"), "root")
+	databaseHost := utils.GetDefaultValue(os.Getenv("DB_HOST"), "localhost")
+	databasePort := utils.GetDefaultValue(os.Getenv("DB_PORT"), "3306")
+	databaseName := utils.GetDefaultValue(os.Getenv("DB_NAME"), "golang_base")
 
-	var databaseType = DatabaseType(default_value.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
+	var databaseType = DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
 
 	switch databaseType {
 	case MySQL:
-		databasePassword := default_value.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
+		databasePassword := utils.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
 		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 			databaseUser,
 			databasePassword,
@@ -74,7 +74,7 @@ func GetDatabaseDSN() string {
 			databaseName,
 		)
 	case Postgres:
-		databasePassword := default_value.GetDefaultValue(os.Getenv("DB_PASSWORD"), "''")
+		databasePassword := utils.GetDefaultValue(os.Getenv("DB_PASSWORD"), "''")
 		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			databaseHost,
 			databasePort,
