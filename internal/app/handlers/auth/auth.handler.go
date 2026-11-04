@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	cookies_service "justcallmesu.com/golang-base/internal/api/cookies"
 	"justcallmesu.com/golang-base/internal/api/request"
 	"justcallmesu.com/golang-base/internal/api/response"
 	auth_dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
-	cookies_service "justcallmesu.com/golang-base/internal/api/cookie"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 

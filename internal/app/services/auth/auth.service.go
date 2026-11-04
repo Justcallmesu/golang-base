@@ -4,10 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
-	"github.com/gin-gonic/gin"
-	cookies_service "justcallmesu.com/golang-base/internal/api/cookie"
 	dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	cookie_dtos "justcallmesu.com/golang-base/internal/app/dtos/cookie"
 	"justcallmesu.com/golang-base/internal/app/models"
@@ -21,15 +18,13 @@ import (
 type Service struct {
 	userRepository        *user_repository.UserRepository
 	jwtService            *token_service.Service
-	cookieService         *cookies_service.Service
 	navigationMenuService *navigation_menu_service.Service
 }
 
-func NewService(repository *user_repository.UserRepository, jwtService *token_service.Service, cookieService *cookies_service.Service, navigationMenuService *navigation_menu_service.Service) *Service {
+func NewService(repository *user_repository.UserRepository, jwtService *token_service.Service, navigationMenuService *navigation_menu_service.Service) *Service {
 	return &Service{
 		userRepository:        repository,
 		jwtService:            jwtService,
-		cookieService:         cookieService,
 		navigationMenuService: navigationMenuService,
 	}
 }
@@ -61,7 +56,10 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 
 	navigationMenu := service.navigationMenuService.GetNavigationMenuBasedOnUserPermission(foundUser)
 
-	return cookies_service.NewTokenCookie(refreshToken, accessToken), foundUser, navigationMenu, nil
+	return &cookie_dtos.TokenCookie{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, foundUser, navigationMenu, nil
 }
 
 func (service *Service) ChangePassword(context context.Context, passwords *dtos.ChangePassword, userData *types.JWTClaims) error {
@@ -106,43 +104,39 @@ func (service *Service) GetMe(context context.Context, userData *types.JWTClaims
 	return user, navigationMenu, nil
 }
 
-func (service *Service) IsRefreshTokenExist(context *gin.Context) (bool, string) {
-	tokenString, tokenError := context.Cookie(os.Getenv("COOKIE_REFRESH_TOKEN"))
-
-	return tokenError == nil, tokenString
-}
-
-func (service *Service) RegenerateAccessToken(context *gin.Context) (string, error) {
+func (service *Service) RefreshTokens(context context.Context, refreshToken string) (*cookie_dtos.TokenCookie, error) {
 	var claims *types.JWTClaims
 	var claimsError error
 
-	isRefreshExist, tokenString := service.IsRefreshTokenExist(context)
-
-	if !isRefreshExist {
-		return "", fmt.Errorf("refresh token not found")
-	}
-
-	claims, claimsError = service.jwtService.ParseToken(tokenString, types.RefreshTokenType)
+	claims, claimsError = service.jwtService.ParseToken(refreshToken, types.RefreshTokenType)
 
 	if claimsError != nil {
-		return "", claimsError
+		return nil, apperror.Unauthorized("invalid refresh token")
+	}
+
+	if _, err := service.userRepository.FindUserByID(claims.UserID, context); err != nil {
+		if apperror.IsKind(err, apperror.KindNotFound) {
+			return nil, apperror.Unauthorized("user no longer exists")
+		}
+
+		return nil, err
 	}
 
 	accessToken, accessTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.AccessTokenType)
-	refrehToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.RefreshTokenType)
+	if accessTokenGenerateError != nil {
+		return nil, apperror.Internal(accessTokenGenerateError)
+	}
+
+	refreshToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.RefreshTokenType)
 
 	if refreshTokenGenerateError != nil {
-		return "", refreshTokenGenerateError
+		return nil, apperror.Internal(refreshTokenGenerateError)
 	}
 
-	if accessTokenGenerateError != nil {
-		return "", accessTokenGenerateError
-	}
-
-	service.cookieService.GenerateAccessCookies(context, accessToken)
-	service.cookieService.GenerateRefreshCookies(context, refrehToken)
-
-	return accessToken, nil
+	return &cookie_dtos.TokenCookie{
+		RefreshToken: refreshToken,
+		AccessToken:  accessToken,
+	}, nil
 
 }
 

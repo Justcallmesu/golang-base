@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
@@ -63,7 +64,7 @@ func (service *Service) GenerateToken(userId types.UUID, username string, tokenT
 		expiresAt = jwt.NewNumericDate(time.Now().Add(service.refreshTokenExpiration))
 		secret = service.refreshTokenSecret
 	default:
-		return "", errors.New("invalid token type")
+		return "", apperror.Unauthorized(fmt.Sprintf("invalid token type: %s", tokenType))
 	}
 
 	claims := service.NewJwtClaims(userId, username, service.issuer, expiresAt.Time)
@@ -72,7 +73,7 @@ func (service *Service) GenerateToken(userId types.UUID, username string, tokenT
 	signedToken, generateError = token.SignedString([]byte(secret))
 
 	if generateError != nil {
-		return "", fmt.Errorf("failed to sign access token: %w", generateError)
+		return "", apperror.Unauthorized("failed to sign the token")
 	}
 	return signedToken, nil
 }
@@ -85,7 +86,7 @@ func (service *Service) ParseToken(tokenString string, tokenType types.TokenType
 
 	token, parseError = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, apperror.Unauthorized(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))
 		}
 
 		switch tokenType {
@@ -94,23 +95,23 @@ func (service *Service) ParseToken(tokenString string, tokenType types.TokenType
 		case types.RefreshTokenType:
 			return []byte(service.refreshTokenSecret), nil
 		}
-		return nil, fmt.Errorf("invalid token type: %s", tokenType)
+		return nil, apperror.Unauthorized(fmt.Sprintf("invalid token type: %s", tokenType))
 	})
 
 	if parseError != nil {
 		if errors.Is(parseError, jwt.ErrTokenExpired) {
-			return nil, fmt.Errorf("token expired, please relogin")
+			return nil, apperror.Unauthorized("token has expired, please relogin")
 		}
 		return nil, parseError
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("token is not valid, please relogin")
+		return nil, apperror.Unauthorized("invalid token")
 	}
 
 	parsedClaims, ok := token.Claims.(*types.JWTClaims)
 	if !ok {
-		return nil, errors.New("could not parse claims")
+		return nil, apperror.Unauthorized("invalid token")
 	}
 
 	return parsedClaims, nil

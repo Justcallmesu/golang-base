@@ -1,4 +1,4 @@
-package cookies_service
+package cookies
 
 import (
 	"net/http"
@@ -14,8 +14,8 @@ type Service struct {
 	refreshTokenExpiration time.Duration
 	accessTokenExpiration  time.Duration
 
-	refreshTokenName string
-	accessTokenName  string
+	RefreshTokenName string
+	AccessTokenName  string
 }
 
 func NewService() *Service {
@@ -32,14 +32,14 @@ func NewService() *Service {
 	return &Service{
 		refreshTokenExpiration: time.Duration(refreshTokenExpiration) * time.Hour,
 		accessTokenExpiration:  time.Duration(accessTokenExpiration) * time.Minute,
-		refreshTokenName:       os.Getenv("COOKIE_REFRESH_TOKEN"),
-		accessTokenName:        os.Getenv("COOKIE_ACCESS_TOKEN"),
+		RefreshTokenName:       os.Getenv("COOKIE_REFRESH_TOKEN"),
+		AccessTokenName:        os.Getenv("COOKIE_ACCESS_TOKEN"),
 	}
 }
 
 func (service *Service) GenerateRefreshCookies(context *gin.Context, refreshToken string) {
 	cookie := &http.Cookie{
-		Name:     service.refreshTokenName,
+		Name:     service.RefreshTokenName,
 		Value:    refreshToken,
 		MaxAge:   int(service.refreshTokenExpiration.Seconds()),
 		Path:     "/",
@@ -53,13 +53,23 @@ func (service *Service) GenerateRefreshCookies(context *gin.Context, refreshToke
 
 func (service *Service) GenerateAccessCookies(context *gin.Context, accessToken string) {
 
-	http.SetCookie(context.Writer, service.generateCookie(service.accessTokenName, accessToken, int(service.accessTokenExpiration.Seconds()), context))
+	cookie := &http.Cookie{
+		Name:     service.AccessTokenName,
+		Value:    accessToken,
+		MaxAge:   int(service.accessTokenExpiration.Seconds()),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   service.isSecureRequest(context), // Set to true if using HTTPS (recommended)
+		SameSite: http.SameSiteLaxMode,
+	}
+
+	http.SetCookie(context.Writer, cookie)
 }
 
 func (service *Service) ResetTokenCookies(context *gin.Context) error {
 
-	context.SetCookie(service.refreshTokenName, "", -1, "/", "", false, true)
-	context.SetCookie(service.accessTokenName, "", -1, "/", "", false, true)
+	context.SetCookie(service.RefreshTokenName, "", -1, "/", "", false, true)
+	context.SetCookie(service.AccessTokenName, "", -1, "/", "", false, true)
 
 	return nil
 }
@@ -72,13 +82,6 @@ func (service *Service) GenerateTokenCookies(context *gin.Context, tokenCookie *
 
 	if tokenCookie.AccessToken != "" {
 		service.GenerateAccessCookies(context, tokenCookie.AccessToken)
-	}
-}
-
-func NewTokenCookie(refreshToken, accessToken string) *cookie_dtos.TokenCookie {
-	return &cookie_dtos.TokenCookie{
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
 	}
 }
 

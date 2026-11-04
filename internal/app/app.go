@@ -2,7 +2,7 @@ package app
 
 import (
 	"gorm.io/gorm"
-	cookies_service "justcallmesu.com/golang-base/internal/api/cookie"
+	cookies_service "justcallmesu.com/golang-base/internal/api/cookies"
 	"justcallmesu.com/golang-base/internal/api/middleware"
 	role_repository "justcallmesu.com/golang-base/internal/app/repositories/role"
 	user_repository "justcallmesu.com/golang-base/internal/app/repositories/user"
@@ -47,7 +47,7 @@ func NewServices(Repositories *Repositories) *Services {
 	cookieService := cookies_service.NewService()
 	jwtService := tokens.NewService()
 	navigationMenuService := navigation_menu_service.NewService()
-	authService := auth_service.NewService(Repositories.UserRepository, jwtService, cookieService, navigationMenuService)
+	authService := auth_service.NewService(Repositories.UserRepository, jwtService, navigationMenuService)
 
 	// User Service
 	userService := user_service.NewService(Repositories.UserRepository)
@@ -67,6 +67,6 @@ func NewServices(Repositories *Repositories) *Services {
 
 func NewMiddlewares(Services *Services) *Middlewares {
 	return &Middlewares{
-		AuthMiddleware: middleware.NewAuthMiddleware(Services.AuthService, Services.JWTService),
+		AuthMiddleware: middleware.NewAuthMiddleware(Services.AuthService, Services.JWTService, Services.CookieService),
 	}
 }
