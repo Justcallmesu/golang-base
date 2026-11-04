@@ -1,5 +1,7 @@
 package apperror
 
+import "errors"
+
 type Kind int
 
 const (
@@ -87,4 +89,12 @@ func Validation(details any) *Error {
 		Message: "Validation Error",
 		Details: details,
 	}
+}
+
+func IsKind(err error, kind Kind) bool {
+	var appErr *Error
+	if ok := errors.As(err, &appErr); ok {
+		return appErr.Kind == kind
+	}
+	return false
 }
