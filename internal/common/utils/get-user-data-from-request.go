@@ -14,5 +14,11 @@ func GetUserData(context *gin.Context) (*types.JWTClaims, error) {
 		return nil, fmt.Errorf("unauthorized, please login")
 	}
 
-	return claims.(*types.JWTClaims), nil
+	parsedClaims, ok := claims.(*types.JWTClaims)
+
+	if !ok {
+		return nil, fmt.Errorf("unauthorized, please login")
+	}
+
+	return parsedClaims, nil
 }
