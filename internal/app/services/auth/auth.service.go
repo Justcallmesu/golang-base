@@ -2,6 +2,7 @@ package auth_service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -13,6 +14,7 @@ import (
 	cookies_service "justcallmesu.com/golang-base/internal/app/services/cookie"
 	navigation_menu_service "justcallmesu.com/golang-base/internal/app/services/navigation-menu"
 	token_service "justcallmesu.com/golang-base/internal/app/services/token"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
@@ -154,4 +156,18 @@ func (service *Service) RegenerateAccessToken(context *gin.Context) (string, err
 
 	return accessToken, nil
 
+}
+
+func (s *Service) HasPermission(ctx context.Context, userID types.UUID, code models.PermissionCodeEnum) (bool, error) {
+	foundUser, err := s.userRepository.FindUserByID(userID, ctx)
+
+	if err != nil {
+		var appError *apperror.Error
+		if errors.As(err, &appError) && appError.Kind == apperror.KindNotFound {
+			return false, apperror.Unauthorized("User no longer exists")
+		}
+		return false, err
+	}
+
+	return foundUser.Role.HasPermission(code), nil
 }
