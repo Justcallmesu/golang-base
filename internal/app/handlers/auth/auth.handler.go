@@ -9,6 +9,7 @@ import (
 	auth_dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
 	cookies_service "justcallmesu.com/golang-base/internal/app/services/cookie"
+	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 type AuthHandler struct {
@@ -31,7 +32,7 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 		return
 	}
 
-	tokens, userData, navigationMenu, loginError := handler.service.Login(context, &credentials)
+	tokens, userData, navigationMenu, loginError := handler.service.Login(context.Request.Context(), &credentials)
 
 	if loginError != nil {
 		context.Error(loginError)
@@ -47,7 +48,14 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 
 func (handler *AuthHandler) Me(context *gin.Context) {
 
-	userData, navigationMenu, getError := handler.service.GetMe(context)
+	jwtClaims, getError := utils.GetUserData(context)
+
+	if getError != nil {
+		context.Error(getError)
+		return
+	}
+
+	userData, navigationMenu, getError := handler.service.GetMe(context.Request.Context(), jwtClaims)
 
 	if getError != nil {
 		context.Error(getError)
@@ -62,6 +70,13 @@ func (handler *AuthHandler) Me(context *gin.Context) {
 }
 
 func (handler *AuthHandler) ChangePassword(context *gin.Context) {
+	userData, getError := utils.GetUserData(context)
+
+	if getError != nil {
+		context.Error(getError)
+		return
+	}
+
 	var changePasswordDto auth_dtos.ChangePassword
 
 	bindingError := context.BindJSON(&changePasswordDto)
@@ -71,7 +86,7 @@ func (handler *AuthHandler) ChangePassword(context *gin.Context) {
 		return
 	}
 
-	updatePasswordError := handler.service.ChangePassword(context, &changePasswordDto)
+	updatePasswordError := handler.service.ChangePassword(context.Request.Context(), &changePasswordDto, userData)
 
 	if updatePasswordError != nil {
 		context.Error(updatePasswordError)

@@ -27,7 +27,7 @@ func NewRepository(database *gorm.DB) *Repository {
 
 func (repository *Repository) FindAll(queryParams *role_dto.RoleQueryDto, context context.Context) (*types.PaginatedResponse[models.Role], error) {
 
-	queryBuilder := repository.database.Model(&models.Role{}).Preload("Permissions", nil)
+	queryBuilder := repository.database.WithContext(context).Model(&models.Role{}).Preload("Permissions", nil)
 
 	if queryParams.Search != "" {
 		searchPattern := fmt.Sprintf("%%%s%%", queryParams.Search)

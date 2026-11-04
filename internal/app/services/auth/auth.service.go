@@ -16,7 +16,6 @@ import (
 	token_service "justcallmesu.com/golang-base/internal/app/services/token"
 	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
-	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 type Service struct {
@@ -43,7 +42,6 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 	}
 
 	loginError = foundUser.ComparePassword(credentials.Password)
-	fmt.Println("Login error:", loginError)
 
 	if loginError != nil {
 		return nil, nil, nil, fmt.Errorf("user or password doesnt match")
@@ -66,14 +64,9 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 	return cookies_service.NewTokenCookie(refreshToken, accessToken), foundUser, navigationMenu, nil
 }
 
-func (service *Service) ChangePassword(context *gin.Context, passwords *dtos.ChangePassword) error {
-	user, getError := utils.GetUserData(context)
+func (service *Service) ChangePassword(context context.Context, passwords *dtos.ChangePassword, userData *types.JWTClaims) error {
 
-	if getError != nil {
-		return fmt.Errorf("unauthorized")
-	}
-
-	foundUser, findUserError := service.userRepository.FindUserByID(user.UserID, context.Request.Context())
+	foundUser, findUserError := service.userRepository.FindUserByID(userData.UserID, context)
 
 	if findUserError != nil {
 		return findUserError
@@ -100,12 +93,7 @@ func (service *Service) ChangePassword(context *gin.Context, passwords *dtos.Cha
 	return nil
 }
 
-func (service *Service) GetMe(context *gin.Context) (*models.User, *[]models.NavigationMenu, error) {
-	userData, getError := utils.GetUserData(context)
-
-	if getError != nil {
-		return nil, nil, fmt.Errorf("unauthorized")
-	}
+func (service *Service) GetMe(context context.Context, userData *types.JWTClaims) (*models.User, *[]models.NavigationMenu, error) {
 
 	user, findUserError := service.userRepository.FindUserByID(userData.UserID, context)
 

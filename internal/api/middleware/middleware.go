@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -74,6 +75,15 @@ func (middleware *AuthMiddleware) RequirePermission(code models.PermissionCodeEn
 		}
 
 		if !hasPermission {
+			slog.Warn("Permission Denied",
+				"user_id", parsedClaims.UserID,
+				"username", parsedClaims.Username,
+				"permission_code", code,
+				"request_path", context.Request.URL.Path,
+				"request_method", context.Request.Method,
+				"ip_address", context.ClientIP(),
+			)
+
 			context.Error(apperror.Forbidden("You do not have permission to perform this action"))
 			context.Abort()
 

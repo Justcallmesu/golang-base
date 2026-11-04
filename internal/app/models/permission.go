@@ -13,7 +13,7 @@ type PermissionCodeEnum string
 
 const (
 	PERMISSION_CREATE_USER PermissionCodeEnum = "CREATE_USER"
-	PERMISSION_UPDATE_USER PermissionCodeEnum = "EDIT_USER"
+	PERMISSION_UPDATE_USER PermissionCodeEnum = "UPDATE_USER"
 	PERMISSION_DELETE_USER PermissionCodeEnum = "DELETE_USER"
 	PERMISSION_VIEW_USER   PermissionCodeEnum = "VIEW_USER"
 

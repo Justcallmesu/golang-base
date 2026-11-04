@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +27,7 @@ func ErrorHandler() gin.HandlerFunc {
 		}
 
 		if appErr.Kind == apperror.KindInternal {
-			log.Printf("[Error] %s %s: %v", c.Request.Method, c.FullPath(), err)
+			slog.Error("[Error] %s %s: %v", c.Request.Method, c.FullPath(), err)
 		}
 
 		c.JSON(statusOf(appErr.Kind), response.NewErrorResponse(appErr.Message, appErr.Details))

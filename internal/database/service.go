@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -26,7 +27,7 @@ func InitConnection() *gorm.DB {
 		panic("Unsupported database type, supported types are: mysql, postgres")
 	}
 
-	fmt.Println("Database Connected Successfully")
+	slog.Info("Database Connected Successfully")
 	return database
 }
 
@@ -88,7 +89,7 @@ func GetDatabaseDSN() string {
 
 func Migrations(database *gorm.DB) {
 
-	fmt.Println("Running migrations...")
+	slog.Warn("Running migrations...")
 
 	migrateError := database.AutoMigrate(
 		&models.Permission{},
@@ -100,6 +101,6 @@ func Migrations(database *gorm.DB) {
 		panic("Error migrating database: " + migrateError.Error())
 	}
 
-	fmt.Println("Migrations completed.")
+	slog.Info("Migrations completed.")
 
 }
