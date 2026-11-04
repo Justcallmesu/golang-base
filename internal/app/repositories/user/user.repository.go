@@ -34,7 +34,7 @@ func NewUserRepository(database *gorm.DB) *UserRepository {
 
 func (repository *UserRepository) FindAll(queryParams *user_dtos.UserQueryDto, context context.Context) (*types.PaginatedResponse[models.User], error) {
 
-	queryBuilder := repository.database.Model(&models.User{}).Preload("Role", nil).Joins("LEFT JOIN roles on roles.Id = users.role_id")
+	queryBuilder := repository.database.Model(&models.User{}).WithContext(context).Preload("Role", nil).Joins("LEFT JOIN roles on roles.Id = users.role_id")
 
 	if queryParams.Search != "" {
 		searchPattern := fmt.Sprintf("%%%s%%", queryParams.Search)
@@ -84,7 +84,7 @@ func (repository *UserRepository) FindUserByID(userID types.UUID, context contex
 }
 
 func (repository *UserRepository) CreateUser(user *models.User, context context.Context) error {
-	err := repository.database.Transaction(func(transaction *gorm.DB) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Save(&user).Error
 	})
 
@@ -92,7 +92,7 @@ func (repository *UserRepository) CreateUser(user *models.User, context context.
 }
 
 func (repository *UserRepository) UpdateUser(user *models.User, context context.Context) error {
-	err := repository.database.Transaction(func(transaction *gorm.DB) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Model(&user).Updates(&user).Error
 	})
 
@@ -100,7 +100,7 @@ func (repository *UserRepository) UpdateUser(user *models.User, context context.
 }
 
 func (repository *UserRepository) UpdateUserPassword(user *models.User, context context.Context) error {
-	err := repository.database.Transaction(func(transaction *gorm.DB) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Save(&user).Error
 	})
 
@@ -108,7 +108,7 @@ func (repository *UserRepository) UpdateUserPassword(user *models.User, context 
 }
 
 func (repository *UserRepository) DeleteUser(userId types.UUID, context context.Context) error {
-	err := repository.database.Transaction(func(transaction *gorm.DB) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Where("ID = ?", userId).Delete(&models.User{}).Error
 	})
 
