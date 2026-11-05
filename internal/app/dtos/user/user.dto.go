@@ -9,7 +9,7 @@ type CreateUserDto struct {
 	Email    string `json:"email" binding:"email"`
 	FullName string `json:"fullName" binding:"required"`
 
-	Password string      `json:"password" binding:"required"`
+	Password string      `json:"password" binding:"required,min=8"`
 	RoleId   *types.UUID `json:"roleId" binding:"required"`
 }
 
@@ -19,7 +19,7 @@ type UpdateUserDto struct {
 	FullName string `json:"fullName" binding:"required"`
 
 	RoleId   *types.UUID `json:"roleId"`
-	Password string      `json:"password"`
+	Password string      `json:"password" binding:"min=8"`
 }
 
 type UserQueryDto struct {
