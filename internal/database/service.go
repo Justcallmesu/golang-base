@@ -13,81 +13,93 @@ import (
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
-func InitConnection() *gorm.DB {
+func InitConnection() (*gorm.DB, error) {
 	databaseType := DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
 
 	var database *gorm.DB
+	var err error
 
 	switch databaseType {
 	case MySQL:
-		database = ConnectSQL()
+		database, err = ConnectSQL()
 	case Postgres:
-		database = ConnectPostgres()
+		database, err = ConnectPostgres()
 	default:
-		panic("Unsupported database type, supported types are: mysql, postgres")
+		return nil, fmt.Errorf("Unsupported database type, supported types are: mysql, postgres")
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("Database connection failed: %v", err)
 	}
 
 	slog.Info("Database Connected Successfully")
-	return database
+	return database, nil
 }
 
-func ConnectSQL() *gorm.DB {
-	dsn := GetDatabaseDSN()
+func ConnectSQL() (*gorm.DB, error) {
+	dsn, err := GetDatabaseDSN()
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get database DSN: %v", err)
+	}
 
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		panic(fmt.Sprintf("SQL Database connection failed: %v", err))
+		return nil, fmt.Errorf("SQL Database connection failed: %v", err)
 	}
 
-	return database
+	return database, nil
 }
 
-func ConnectPostgres() *gorm.DB {
-	dsn := GetDatabaseDSN()
+func ConnectPostgres() (*gorm.DB, error) {
+	dsn, err := GetDatabaseDSN()
+
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get database DSN: %v", err)
+	}
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		panic(fmt.Sprintf("Postgres Database connection failed: %v", err))
+		return nil, fmt.Errorf("Postgres Database connection failed: %v", err)
 	}
 
-	return database
+	return database, nil
 }
 
-func GetDatabaseDSN() string {
+func GetDatabaseDSN() (string, error) {
 	databaseUser := utils.GetDefaultValue(os.Getenv("DB_USER"), "root")
 	databaseHost := utils.GetDefaultValue(os.Getenv("DB_HOST"), "localhost")
 	databasePort := utils.GetDefaultValue(os.Getenv("DB_PORT"), "3306")
 	databaseName := utils.GetDefaultValue(os.Getenv("DB_NAME"), "golang_base")
 
-	var databaseType = DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
+	databaseType := DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
+	databasePassword := utils.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
 
 	switch databaseType {
 	case MySQL:
-		databasePassword := utils.GetDefaultValue(os.Getenv("DB_PASSWORD"), "")
 		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 			databaseUser,
 			databasePassword,
 			databaseHost,
 			databasePort,
 			databaseName,
-		)
+		), nil
 	case Postgres:
-		databasePassword := utils.GetDefaultValue(os.Getenv("DB_PASSWORD"), "''")
 		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			databaseHost,
 			databasePort,
 			databaseUser,
 			databasePassword,
 			databaseName,
-		)
+		), nil
 	default:
-		panic("Unsupported database type, supported types are: mysql, postgres")
+		return "", fmt.Errorf("Unsupported database type, supported types are: mysql, postgres")
 	}
 }
 
-func Migrations(database *gorm.DB) {
+func Migrations(database *gorm.DB) error {
 
 	slog.Warn("Running migrations...")
 
@@ -98,9 +110,11 @@ func Migrations(database *gorm.DB) {
 	)
 
 	if migrateError != nil {
-		panic("Error migrating database: " + migrateError.Error())
+		return fmt.Errorf("Error during migration: %v", migrateError)
 	}
 
 	slog.Info("Migrations completed.")
+
+	return nil
 
 }

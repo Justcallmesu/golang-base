@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 	"time"
 
@@ -14,20 +15,30 @@ func main() {
 
 	config.LoadConfig()
 
-	database := database.InitConnection()
+	database, databaseError := database.InitConnection()
+
+	if databaseError != nil {
+		slog.Error("Error initializing database connection", "error", databaseError)
+		os.Exit(1)
+	}
+
 	defer func() {
 
 		sqlDB, sqlDbError := database.DB()
 
 		if sqlDbError != nil {
-			panic(sqlDbError)
+			slog.Error("Error getting database instance", "error", sqlDbError)
+			os.Exit(1)
 		}
 
 		sqlDbError = sqlDB.Close()
 
 		if sqlDbError != nil {
-			panic(sqlDbError)
+			slog.Error("Error closing database connection", "error", sqlDbError)
+			os.Exit(1)
 		}
+
+		slog.Info("Database connection closed successfully")
 	}()
 
 	logger := log.NewWithOptions(os.Stderr, log.Options{

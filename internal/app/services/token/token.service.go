@@ -25,15 +25,15 @@ type Service struct {
 	issuer                 string
 }
 
-func NewService() *Service {
+func NewService() (*Service, error) {
 	accessTokenExpiration, err := strconv.ParseInt(utils.GetEnv("JWT_ACCESS_EXPIRATION", "15"), 10, 64)
 	if err != nil {
-		panic("Invalid JWT_ACCESS_EXPIRATION value")
+		return nil, fmt.Errorf("Error parsing JWT_ACCESS_EXPIRATION: %w", err)
 	}
 
 	refreshTokenExpiration, err := strconv.ParseInt(utils.GetEnv("JWT_REFRESH_EXPIRATION", "24"), 10, 64)
 	if err != nil {
-		panic("Invalid JWT_REFRESH_EXPIRATION value")
+		return nil, fmt.Errorf("Error parsing JWT_REFRESH_EXPIRATION: %w", err)
 	}
 
 	issuer := utils.GetEnv("APP_NAME", "MyApp")
@@ -41,13 +41,23 @@ func NewService() *Service {
 	accessTokenExpirationDate := time.Duration(accessTokenExpiration) * time.Minute
 	refreshTokenExpirationDate := time.Duration(refreshTokenExpiration) * time.Hour
 
+	accessTokenSecret := os.Getenv("JWT_ACCESS_SECRET")
+	if accessTokenSecret == "" {
+		return nil, errors.New("JWT_ACCESS_SECRET is not set")
+	}
+
+	refreshTokenSecret := os.Getenv("JWT_REFRESH_SECRET")
+	if refreshTokenSecret == "" {
+		return nil, errors.New("JWT_REFRESH_SECRET is not set")
+	}
+
 	return &Service{
-		accessTokenSecret:      os.Getenv("JWT_ACCESS_SECRET"),
-		refreshTokenSecret:     os.Getenv("JWT_REFRESH_SECRET"),
+		accessTokenSecret:      accessTokenSecret,
+		refreshTokenSecret:     refreshTokenSecret,
 		accessTokenExpiration:  accessTokenExpirationDate,
 		refreshTokenExpiration: refreshTokenExpirationDate,
 		issuer:                 issuer,
-	}
+	}, nil
 }
 
 func (service *Service) GenerateToken(userId types.UUID, username string, tokenType types.TokenType) (string, error) {

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -34,17 +36,32 @@ func main() {
 
 	// Initialize Gin engine and database connection
 	Engine := gin.Default()
-	databaseConnection := database.InitConnection()
+	databaseConnection, databaseError := database.InitConnection()
+
+	if databaseError != nil {
+		slog.Error("Error initializing database connection", "error", databaseError)
+		os.Exit(1)
+	}
 
 	// Perform database migration if enabled
 	if syncOnstart {
-		database.Migrations(databaseConnection)
+		migrationError := database.Migrations(databaseConnection)
+		if migrationError != nil {
+			slog.Error("Database migration failed", "error", migrationError)
+			os.Exit(1)
+		}
 		log.Println("Database migration completed successfully.")
 	}
 
 	// Initialize Modules
 	var repositories = app.NewRepositories(databaseConnection)
-	var services = app.NewServices(repositories)
+	var services, serviceError = app.NewServices(repositories)
+
+	if serviceError != nil {
+		slog.Error("Invalid Configuration", "error", serviceError)
+		os.Exit(1)
+	}
+
 	var middlewares = app.NewMiddlewares(services)
 
 	// Cors

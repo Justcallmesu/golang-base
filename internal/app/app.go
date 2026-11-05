@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 	cookies_service "justcallmesu.com/golang-base/internal/api/cookies"
 	"justcallmesu.com/golang-base/internal/api/middleware"
@@ -43,9 +45,17 @@ func NewRepositories(database *gorm.DB) *Repositories {
 	}
 }
 
-func NewServices(Repositories *Repositories) *Services {
-	cookieService := cookies_service.NewService()
-	jwtService := tokens.NewService()
+func NewServices(Repositories *Repositories) (*Services, error) {
+	cookieService, err := cookies_service.NewService()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cookie service: %w", err)
+	}
+
+	jwtService, err := tokens.NewService()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create JWT service: %w", err)
+	}
+
 	navigationMenuService := navigation_menu_service.NewService()
 	authService := auth_service.NewService(Repositories.UserRepository, jwtService, navigationMenuService)
 
@@ -62,7 +72,7 @@ func NewServices(Repositories *Repositories) *Services {
 		NavigationMenuService: navigationMenuService,
 		UserService:           userService,
 		RoleService:           roleService,
-	}
+	}, err
 }
 
 func NewMiddlewares(Services *Services) *Middlewares {

@@ -1,6 +1,7 @@
 package cookies
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,15 +19,25 @@ type Service struct {
 	AccessTokenName  string
 }
 
-func NewService() *Service {
+func NewService() (*Service, error) {
 	refreshTokenExpiration, err := strconv.ParseInt(os.Getenv("COOKIE_REFRESH_EXPIRATION"), 10, 64)
 	if err != nil {
-		panic("Invalid COOKIE_REFRESH_EXPIRATION value")
+		return nil, fmt.Errorf("invalid COOKIE_REFRESH_EXPIRATION value: %w", err)
 	}
 
 	accessTokenExpiration, err := strconv.ParseInt(os.Getenv("COOKIE_ACCESS_EXPIRATION"), 10, 64)
 	if err != nil {
-		panic("Invalid COOKIE_ACCESS_EXPIRATION value")
+		return nil, fmt.Errorf("invalid COOKIE_ACCESS_EXPIRATION value: %w", err)
+	}
+
+	refreshTokenName := os.Getenv("COOKIE_REFRESH_TOKEN")
+	if refreshTokenName == "" {
+		return nil, fmt.Errorf("environment variable COOKIE_REFRESH_TOKEN is not set")
+	}
+
+	accessTokenName := os.Getenv("COOKIE_ACCESS_TOKEN")
+	if accessTokenName == "" {
+		return nil, fmt.Errorf("environment variable COOKIE_ACCESS_TOKEN is not set")
 	}
 
 	return &Service{
@@ -34,7 +45,7 @@ func NewService() *Service {
 		accessTokenExpiration:  time.Duration(accessTokenExpiration) * time.Minute,
 		RefreshTokenName:       os.Getenv("COOKIE_REFRESH_TOKEN"),
 		AccessTokenName:        os.Getenv("COOKIE_ACCESS_TOKEN"),
-	}
+	}, nil
 }
 
 func (service *Service) GenerateRefreshCookies(context *gin.Context, refreshToken string) {
