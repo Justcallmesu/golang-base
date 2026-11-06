@@ -60,16 +60,14 @@ func (service *Service) UpdateUser(context context.Context, updateUserDto *user_
 		return nil, updateError
 	}
 
+	user.ApplyTo(updateUserDto)
+
 	if updateUserDto.RoleId != nil {
 		user.RoleId = updateUserDto.RoleId
 		if err := service.validate(user, context); err != nil {
 			return nil, err
 		}
 	}
-
-	user.Username = updateUserDto.Username
-	user.FullName = updateUserDto.FullName
-	user.Email = updateUserDto.Email
 
 	if updateUserDto.Password != "" {
 		updateError = user.SetPassword(updateUserDto.Password)

@@ -18,6 +18,6 @@ func UserRoutes(router *gin.RouterGroup, services *app.Services, middlewares *ap
 	userRouter.GET(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_VIEW_USER), userHandler.GetUserById)
 
 	userRouter.POST("", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_CREATE_USER), userHandler.CreateUser)
-	userRouter.PUT(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_UPDATE_USER), userHandler.UpdateUser)
+	userRouter.PATCH(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_UPDATE_USER), userHandler.UpdateUser)
 	userRouter.DELETE(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_DELETE_USER), userHandler.DeleteUser)
 }

@@ -94,7 +94,7 @@ func (repository *Repository) CreateUser(user *models.User, context context.Cont
 
 func (repository *Repository) UpdateUser(user *models.User, context context.Context) error {
 	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
-		return transaction.Omit(clause.Associations).Model(&user).Updates(&user).Error
+		return transaction.Omit(clause.Associations).Save(&user).Error
 	})
 
 	return repository.handleDatabaseError(err)
