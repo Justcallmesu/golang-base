@@ -36,6 +36,21 @@ func InitConnection() (*gorm.DB, error) {
 	return database, nil
 }
 
+func CloseConnection(database *gorm.DB) error {
+	sqlDB, err := database.DB()
+	if err != nil {
+		return fmt.Errorf("Failed to get database instance: %v", err)
+	}
+
+	err = sqlDB.Close()
+	if err != nil {
+		return fmt.Errorf("Failed to close database connection: %v", err)
+	}
+
+	slog.Info("Database connection closed successfully")
+	return nil
+}
+
 func ConnectSQL() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
