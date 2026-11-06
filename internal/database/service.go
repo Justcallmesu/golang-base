@@ -25,11 +25,11 @@ func InitConnection() (*gorm.DB, error) {
 	case Postgres:
 		database, err = ConnectPostgres()
 	default:
-		return nil, fmt.Errorf("Unsupported database type, supported types are: mysql, postgres")
+		return nil, fmt.Errorf("unsupported database type, supported types are: mysql, postgres")
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("Database connection failed: %v", err)
+		return nil, err
 	}
 
 	slog.Info("Database Connected Successfully")
@@ -55,13 +55,13 @@ func ConnectSQL() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get database DSN: %v", err)
+		return nil, fmt.Errorf("Failed to get SQL database DSN: %v", err)
 	}
 
 	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		return nil, fmt.Errorf("SQL Database connection failed: %v", err)
+		return nil, fmt.Errorf("SQL database connection failed: %v", err)
 	}
 
 	return database, nil
@@ -71,13 +71,13 @@ func ConnectPostgres() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get database DSN: %v", err)
+		return nil, fmt.Errorf("failed to get Postgres database DSN: %v", err)
 	}
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		return nil, fmt.Errorf("Postgres Database connection failed: %v", err)
+		return nil, fmt.Errorf("postgres database connection failed: %v", err)
 	}
 
 	return database, nil
