@@ -6,6 +6,6 @@ type LoginUser struct {
 }
 
 type ChangePassword struct {
-	OldPassword string `json:"oldPassword" binding:"required,min=8"`
+	OldPassword string `json:"oldPassword" binding:"required"`
 	NewPassword string `json:"newPassword" binding:"required,min=8"`
 }
