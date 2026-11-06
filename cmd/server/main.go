@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"log"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -24,14 +28,20 @@ import (
 
 func main() {
 	// Load configuration
-	config.LoadConfig()
+	configError := config.LoadConfig()
+
+	if configError != nil {
+		slog.Error("Error loading configuration", "error", configError)
+		os.Exit(1)
+	}
 
 	// Get environment variables
 	appPort := utils.GetEnv("APP_PORT", "3000")
 	syncOnstart, parseErr := strconv.ParseBool(utils.GetEnv("DB_SYNC_ON_START", "false"))
 
 	if parseErr != nil {
-		log.Fatal("Error parsing DB_SYNC_ON_START:", parseErr)
+		slog.Error("Error parsing DB_SYNC_ON_START", "error", parseErr)
+		os.Exit(1)
 	}
 
 	// Initialize Gin engine and database connection
@@ -50,7 +60,7 @@ func main() {
 			slog.Error("Database migration failed", "error", migrationError)
 			os.Exit(1)
 		}
-		log.Println("Database migration completed successfully.")
+		slog.Info("Database migration completed successfully.")
 	}
 
 	// Initialize Modules
@@ -77,6 +87,9 @@ func main() {
 		},
 	))
 
+	Engine.Use(middleware.ErrorHandler())
+	routes.SetupRoutes(Engine, repositories, services, middlewares)
+
 	// Validator
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -96,15 +109,44 @@ func main() {
 	}
 
 	// Setup Routes
-	Engine.Use(middleware.ErrorHandler())
-	routes.SetupRoutes(Engine, repositories, services, middlewares)
-
-	// Start the server
-	engineError := Engine.Run(fmt.Sprintf(":%s", appPort))
-
-	if engineError != nil {
-		log.Fatal(engineError)
+	serverInstance := &http.Server{
+		Addr:              fmt.Sprintf(":%s", appPort),
+		Handler:           Engine, // Gin Engine As Handler
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
-	log.Println("Server is running on port:", appPort)
+	ctx, stopSignal := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
+	defer stopSignal()
+
+	go func() {
+		slog.Info("Server listening", "addr", serverInstance.Addr)
+
+		if err := serverInstance.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("Server failed to start", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	slog.Info("Server shutting down...")
+
+	shutdownContext, shutdownCancel := context.WithTimeout(context.Background(), 8*time.Second)
+
+	defer shutdownCancel()
+
+	if err := serverInstance.Shutdown(shutdownContext); err != nil {
+		slog.Error("Server forced to shutdown", "error", err)
+	}
+
+	if err := database.CloseConnection(databaseConnection); err != nil {
+		slog.Error("Error closing database connection", "error", err)
+	}
+
+	slog.Info("Server exited gracefully")
+
 }
