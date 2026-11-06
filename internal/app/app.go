@@ -27,7 +27,7 @@ type Services struct {
 }
 
 type Repositories struct {
-	UserRepository *user_repository.UserRepository
+	UserRepository *user_repository.Repository
 	RoleRepository *role_repository.Repository
 }
 
@@ -36,7 +36,7 @@ type Middlewares struct {
 }
 
 func NewRepositories(database *gorm.DB) *Repositories {
-	userRepository := user_repository.NewUserRepository(database)
+	userRepository := user_repository.NewRepository(database)
 	roleRepository := role_repository.NewRepository(database)
 
 	return &Repositories{
@@ -60,7 +60,7 @@ func NewServices(Repositories *Repositories) (*Services, error) {
 	authService := auth_service.NewService(Repositories.UserRepository, jwtService, navigationMenuService)
 
 	// User Service
-	userService := user_service.NewService(Repositories.UserRepository)
+	userService := user_service.NewService(Repositories.UserRepository, Repositories.RoleRepository)
 
 	// Role Service
 	roleService := role_service.NewService(Repositories.RoleRepository)
