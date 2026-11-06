@@ -13,6 +13,11 @@ import (
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
+var gormConfig = &gorm.Config{
+	DisableForeignKeyConstraintWhenMigrating: true,
+	TranslateError:                           true,
+}
+
 func InitConnection() (*gorm.DB, error) {
 	databaseType := DatabaseType(utils.GetDefaultValue(os.Getenv("DB_TYPE"), "mysql"))
 
@@ -58,7 +63,7 @@ func ConnectSQL() (*gorm.DB, error) {
 		return nil, fmt.Errorf("Failed to get SQL database DSN: %v", err)
 	}
 
-	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(mysql.Open(dsn), gormConfig)
 
 	if err != nil {
 		return nil, fmt.Errorf("SQL database connection failed: %v", err)
@@ -74,7 +79,7 @@ func ConnectPostgres() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to get Postgres database DSN: %v", err)
 	}
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(dsn), gormConfig)
 
 	if err != nil {
 		return nil, fmt.Errorf("postgres database connection failed: %v", err)
