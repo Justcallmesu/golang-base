@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -130,7 +131,7 @@ func run() int {
 	}
 
 	// Stop Signal
-	ctx, stopSignal := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	ctx, stopSignal := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stopSignal()
 
 	// Port Listener
