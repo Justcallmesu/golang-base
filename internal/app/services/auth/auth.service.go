@@ -16,12 +16,12 @@ import (
 )
 
 type Service struct {
-	userRepository        *user_repository.UserRepository
+	userRepository        *user_repository.Repository
 	jwtService            *token_service.Service
 	navigationMenuService *navigation_menu_service.Service
 }
 
-func NewService(repository *user_repository.UserRepository, jwtService *token_service.Service, navigationMenuService *navigation_menu_service.Service) *Service {
+func NewService(repository *user_repository.Repository, jwtService *token_service.Service, navigationMenuService *navigation_menu_service.Service) *Service {
 	return &Service{
 		userRepository:        repository,
 		jwtService:            jwtService,
