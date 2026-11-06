@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -27,12 +27,17 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+
+}
+
+func run() int {
 	// Load configuration
 	configError := config.LoadConfig()
 
 	if configError != nil {
 		slog.Error("Error loading configuration", "error", configError)
-		os.Exit(1)
+		return 1
 	}
 
 	// Get environment variables
@@ -41,7 +46,7 @@ func main() {
 
 	if parseErr != nil {
 		slog.Error("Error parsing DB_SYNC_ON_START", "error", parseErr)
-		os.Exit(1)
+		return 1
 	}
 
 	// Initialize Gin engine and database connection
@@ -50,15 +55,21 @@ func main() {
 
 	if databaseError != nil {
 		slog.Error("Error initializing database connection", "error", databaseError)
-		os.Exit(1)
+		return 1
 	}
+
+	defer func() {
+		if err := database.CloseConnection(databaseConnection); err != nil {
+			slog.Error("Error closing database connection", "error", err)
+		}
+	}()
 
 	// Perform database migration if enabled
 	if syncOnstart {
 		migrationError := database.Migrations(databaseConnection)
 		if migrationError != nil {
 			slog.Error("Database migration failed", "error", migrationError)
-			os.Exit(1)
+			return 1
 		}
 		slog.Info("Database migration completed successfully.")
 	}
@@ -69,7 +80,7 @@ func main() {
 
 	if serviceError != nil {
 		slog.Error("Invalid Configuration", "error", serviceError)
-		os.Exit(1)
+		return 1
 	}
 
 	var middlewares = app.NewMiddlewares(services)
@@ -118,22 +129,37 @@ func main() {
 		IdleTimeout:       60 * time.Second,
 	}
 
-	ctx, stopSignal := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-
+	// Stop Signal
+	ctx, stopSignal := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer stopSignal()
 
-	go func() {
-		slog.Info("Server listening", "addr", serverInstance.Addr)
+	// Port Listener
+	listener, err := net.Listen("tcp", serverInstance.Addr)
 
-		if err := serverInstance.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.Error("Server failed to start", "error", err)
-			os.Exit(1)
+	if err != nil {
+		slog.Error("Cannot bind port", "addr", serverInstance.Addr, "error", err)
+		return 1
+	}
+
+	slog.Info("Server listening", "addr", listener.Addr().String())
+
+	serverError := make(chan error, 1)
+
+	go func() {
+		if err := serverInstance.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverError <- err
 		}
 	}()
 
-	<-ctx.Done()
+	exitCode := 0
 
-	slog.Info("Server shutting down...")
+	select {
+	case <-ctx.Done():
+		slog.Info("Received shutdown signal")
+	case err := <-serverError:
+		slog.Error("Server error", "error", err)
+		exitCode = 1
+	}
 
 	shutdownContext, shutdownCancel := context.WithTimeout(context.Background(), 8*time.Second)
 
@@ -143,10 +169,6 @@ func main() {
 		slog.Error("Server forced to shutdown", "error", err)
 	}
 
-	if err := database.CloseConnection(databaseConnection); err != nil {
-		slog.Error("Error closing database connection", "error", err)
-	}
-
-	slog.Info("Server exited gracefully")
-
+	slog.Info("Server exited", "exitCode", exitCode)
+	return exitCode
 }
