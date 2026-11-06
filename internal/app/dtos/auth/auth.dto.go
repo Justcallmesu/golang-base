@@ -2,7 +2,7 @@ package auth_dtos
 
 type LoginUser struct {
 	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required,min=8"`
+	Password string `json:"password" binding:"required"`
 }
 
 type ChangePassword struct {
