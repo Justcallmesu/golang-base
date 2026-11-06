@@ -28,7 +28,7 @@ func (handler *Handler) FindAllRoles(context *gin.Context) {
 		return
 	}
 
-	paginatedResponse, err := handler.roleService.GetAllRoles(context, &queryParams)
+	paginatedResponse, err := handler.roleService.GetAllRoles(context.Request.Context(), &queryParams)
 
 	if err != nil {
 		context.Error(err)
@@ -46,7 +46,7 @@ func (handler *Handler) GetRoleById(context *gin.Context) {
 		return
 	}
 
-	role, err := handler.roleService.GetRoleByID(context, roleId)
+	role, err := handler.roleService.GetRoleByID(context.Request.Context(), roleId)
 
 	if err != nil {
 		context.Error(err)

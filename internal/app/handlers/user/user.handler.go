@@ -29,7 +29,7 @@ func (handler *Handler) FindAllUsers(context *gin.Context) {
 		return
 	}
 
-	paginatedResponse, err := handler.userService.GetAllUsers(context, &queryParams)
+	paginatedResponse, err := handler.userService.GetAllUsers(context.Request.Context(), &queryParams)
 
 	if err != nil {
 		context.Error(err)
@@ -47,7 +47,7 @@ func (handler *Handler) GetUserById(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.userService.GetUserByID(context, userId)
+	user, err := handler.userService.GetUserByID(context.Request.Context(), userId)
 
 	if err != nil {
 		context.Error(err)
@@ -65,7 +65,7 @@ func (handler *Handler) CreateUser(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.userService.CreateUser(context, &createUserDto)
+	user, err := handler.userService.CreateUser(context.Request.Context(), &createUserDto)
 
 	if err != nil {
 		context.Error(err)
@@ -89,7 +89,7 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 		return
 	}
 
-	user, err := handler.userService.UpdateUser(context, &updateUserDto, userId)
+	user, err := handler.userService.UpdateUser(context.Request.Context(), &updateUserDto, userId)
 
 	if err != nil {
 		context.Error(err)
@@ -108,7 +108,7 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 		return
 	}
 
-	err = handler.userService.DeleteUser(context, userId)
+	err = handler.userService.DeleteUser(context.Request.Context(), userId)
 
 	if err != nil {
 		context.Error(err)
