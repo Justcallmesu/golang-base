@@ -10,7 +10,12 @@ import (
 
 func main() {
 
-	config.LoadConfig()
+	configError := config.LoadConfig()
+
+	if configError != nil {
+		slog.Error("Error loading configuration", "error", configError)
+		os.Exit(1)
+	}
 
 	dbConnection, databaseError := database.InitConnection()
 

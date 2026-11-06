@@ -72,7 +72,7 @@ func NewServices(Repositories *Repositories) (*Services, error) {
 		NavigationMenuService: navigationMenuService,
 		UserService:           userService,
 		RoleService:           roleService,
-	}, err
+	}, nil
 }
 
 func NewMiddlewares(Services *Services) *Middlewares {
