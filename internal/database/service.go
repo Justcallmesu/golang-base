@@ -14,8 +14,7 @@ import (
 )
 
 var gormConfig = &gorm.Config{
-	DisableForeignKeyConstraintWhenMigrating: true,
-	TranslateError:                           true,
+	TranslateError: true,
 }
 
 func InitConnection() (*gorm.DB, error) {
