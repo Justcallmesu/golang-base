@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	user_dtos "justcallmesu.com/golang-base/internal/app/dtos/user"
 	"justcallmesu.com/golang-base/internal/app/models"
 	"justcallmesu.com/golang-base/internal/common/apperror"
@@ -13,7 +14,7 @@ import (
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
-type UserRepository struct {
+type Repository struct {
 	database *gorm.DB
 }
 
@@ -26,23 +27,23 @@ var userSortColumn = map[string]string{
 	"email":       "email",
 }
 
-func NewUserRepository(database *gorm.DB) *UserRepository {
-	return &UserRepository{
+func NewRepository(database *gorm.DB) *Repository {
+	return &Repository{
 		database: database,
 	}
 }
 
-func (repository *UserRepository) FindAll(queryParams *user_dtos.UserQueryDto, context context.Context) (*types.PaginatedResponse[models.User], error) {
+func (repository *Repository) FindAll(queryParams *user_dtos.UserQueryDto, context context.Context) (*types.PaginatedResponse[models.User], error) {
 
 	queryBuilder := repository.database.Model(&models.User{}).WithContext(context).Preload("Role", nil).Joins("LEFT JOIN roles on roles.Id = users.role_id")
 
 	if queryParams.Search != "" {
 		searchPattern := fmt.Sprintf("%%%s%%", queryParams.Search)
-		queryBuilder = queryBuilder.Where("username LIKE ? OR roles.name LIKE ?", searchPattern, searchPattern)
+		queryBuilder = queryBuilder.Where("users.username LIKE ? OR roles.name LIKE ?", searchPattern, searchPattern)
 	}
 
 	if queryParams.RoleId != nil {
-		queryBuilder = queryBuilder.Where("role_id = ?", *queryParams.RoleId)
+		queryBuilder = queryBuilder.Where("users.role_id = ?", *queryParams.RoleId)
 	}
 
 	if queryParams.SortBy != "" && queryParams.SortDir != "" {
@@ -64,7 +65,7 @@ func (repository *UserRepository) FindAll(queryParams *user_dtos.UserQueryDto, c
 
 }
 
-func (repository *UserRepository) FindUserByUsername(username string, context context.Context) (*models.User, error) {
+func (repository *Repository) FindUserByUsername(username string, context context.Context) (*models.User, error) {
 	user, fetchError := gorm.G[models.User](repository.database).Where("Username = ?", username).Preload("Role", nil).Select("*").Preload("Role.Permissions", nil).First(context)
 	if fetchError != nil {
 		return nil, repository.handleDatabaseError(fetchError)
@@ -73,7 +74,7 @@ func (repository *UserRepository) FindUserByUsername(username string, context co
 	return &user, nil
 }
 
-func (repository *UserRepository) FindUserByID(userID types.UUID, context context.Context) (*models.User, error) {
+func (repository *Repository) FindUserByID(userID types.UUID, context context.Context) (*models.User, error) {
 	user, fetchError := gorm.G[models.User](repository.database).Preload("Role", nil).Preload("Role.Permissions", nil).Where("ID = ?", userID).First(context)
 
 	if fetchError != nil {
@@ -83,7 +84,23 @@ func (repository *UserRepository) FindUserByID(userID types.UUID, context contex
 	return &user, nil
 }
 
-func (repository *UserRepository) CreateUser(user *models.User, context context.Context) error {
+func (repository *Repository) CreateUser(user *models.User, context context.Context) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
+		return transaction.Omit(clause.Associations).Save(&user).Error
+	})
+
+	return repository.handleDatabaseError(err)
+}
+
+func (repository *Repository) UpdateUser(user *models.User, context context.Context) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
+		return transaction.Omit(clause.Associations).Model(&user).Updates(&user).Error
+	})
+
+	return repository.handleDatabaseError(err)
+}
+
+func (repository *Repository) UpdateUserPassword(user *models.User, context context.Context) error {
 	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Save(&user).Error
 	})
@@ -91,23 +108,7 @@ func (repository *UserRepository) CreateUser(user *models.User, context context.
 	return repository.handleDatabaseError(err)
 }
 
-func (repository *UserRepository) UpdateUser(user *models.User, context context.Context) error {
-	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
-		return transaction.Model(&user).Updates(&user).Error
-	})
-
-	return repository.handleDatabaseError(err)
-}
-
-func (repository *UserRepository) UpdateUserPassword(user *models.User, context context.Context) error {
-	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
-		return transaction.Save(&user).Error
-	})
-
-	return repository.handleDatabaseError(err)
-}
-
-func (repository *UserRepository) DeleteUser(userId types.UUID, context context.Context) error {
+func (repository *Repository) DeleteUser(userId types.UUID, context context.Context) error {
 	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
 		return transaction.Where("ID = ?", userId).Delete(&models.User{}).Error
 	})
@@ -115,7 +116,7 @@ func (repository *UserRepository) DeleteUser(userId types.UUID, context context.
 	return repository.handleDatabaseError(err)
 }
 
-func (repository *UserRepository) handleDatabaseError(err error) error {
+func (repository *Repository) handleDatabaseError(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -123,6 +124,8 @@ func (repository *UserRepository) handleDatabaseError(err error) error {
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return apperror.NotFound("User not found")
+	case errors.Is(err, gorm.ErrDuplicatedKey):
+		return apperror.Conflict("user with the same username or email already exists")
 	default:
 		return apperror.Internal(err)
 	}
