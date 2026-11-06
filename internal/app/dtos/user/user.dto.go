@@ -19,7 +19,7 @@ type UpdateUserDto struct {
 	FullName string `json:"fullName" binding:"required"`
 
 	RoleId   *types.UUID `json:"roleId"`
-	Password string      `json:"password" binding:"min=8"`
+	Password string      `json:"password" binding:"omitempty,min=8"`
 }
 
 type UserQueryDto struct {
