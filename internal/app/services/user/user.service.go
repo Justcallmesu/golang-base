@@ -27,12 +27,7 @@ func (service *Service) GetAllUsers(context context.Context, queryParams *user_d
 }
 
 func (service *Service) CreateUser(context context.Context, createUserDto *user_dtos.CreateUserDto) (*models.User, error) {
-	user := &models.User{
-		Username: createUserDto.Username,
-		FullName: createUserDto.FullName,
-		Email:    createUserDto.Email,
-		RoleId:   createUserDto.RoleId,
-	}
+	user := createUserDto.ToModel()
 
 	if err := service.validate(user, context); err != nil {
 		return nil, err
@@ -60,18 +55,15 @@ func (service *Service) UpdateUser(context context.Context, updateUserDto *user_
 		return nil, updateError
 	}
 
-	user.ApplyTo(updateUserDto)
-
+	updateUserDto.ApplyTo(user)
 	if updateUserDto.RoleId != nil {
-		user.RoleId = updateUserDto.RoleId
 		if err := service.validate(user, context); err != nil {
 			return nil, err
 		}
 	}
 
-	if updateUserDto.Password != "" {
-		updateError = user.SetPassword(updateUserDto.Password)
-		if updateError != nil {
+	if updateUserDto.Password != nil {
+		if updateError = user.SetPassword(*updateUserDto.Password); updateError != nil {
 			return nil, updateError
 		}
 	}

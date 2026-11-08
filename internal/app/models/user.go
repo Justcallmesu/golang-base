@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
-	user_dtos "justcallmesu.com/golang-base/internal/app/dtos/user"
 	"justcallmesu.com/golang-base/internal/common/types"
 )
 
@@ -24,21 +23,6 @@ type User struct {
 	// Relationships
 	RoleId *types.UUID `json:"roleId,omitempty,omitzero"`
 	Role   Role        `json:"role,omitempty,omitzero" gorm:"foreignKey:RoleId;references:ID;constraint:OnDelete:SET NULL"`
-}
-
-func (user *User) ApplyTo(updateUser *user_dtos.UpdateUserDto) {
-	if updateUser.Username != "" {
-		user.Username = updateUser.Username
-	}
-	if updateUser.FullName != "" {
-		user.FullName = updateUser.FullName
-	}
-	if updateUser.Email != "" {
-		user.Email = updateUser.Email
-	}
-	if updateUser.RoleId != nil {
-		user.RoleId = updateUser.RoleId
-	}
 }
 
 func (user *User) SetPassword(password string) error {
