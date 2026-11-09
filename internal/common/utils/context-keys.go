@@ -1,6 +1,6 @@
 package utils
 
 const (
-	RequestIDKeys = "requestID"
-	UserDataKeys  = "UserData"
+	RequestIDKey = "requestID"
+	UserDataKey  = "UserData"
 )
