@@ -25,49 +25,50 @@ type LoggerConfig struct {
 }
 
 func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		if _, skip := cfg.SkipPaths[ctx.Request.URL.Path]; skip {
-			ctx.Next()
+	return func(c *gin.Context) {
+		if _, skip := cfg.SkipPaths[c.Request.URL.Path]; skip {
+			c.Next()
 			return
 		}
 
 		startTime := time.Now()
-		requestID := ctx.GetHeader("X-Request-ID")
+		requestID := c.GetHeader("X-Request-ID")
 
 		if requestID == "" {
 			requestID = uuid.NewString()
 		}
 
-		ctx.Set(utils.RequestIDKeys, requestID)
-		ctx.Header("X-Request-ID", requestID)
+		c.Set(utils.RequestIDKey, requestID)
+		c.Header("X-Request-ID", requestID)
 
 		var body any
-		if cfg.LogBody && ctx.Request.Body != nil && ctx.ContentType() == "application/json" {
-			rawBody, _ := io.ReadAll(io.LimitReader(ctx.Request.Body, cfg.MaxBodyBytes))
-			ctx.Request.Body = io.NopCloser(io.MultiReader(io.MultiReader(bytes.NewReader(rawBody), ctx.Request.Body)))
+		if cfg.LogBody && c.Request.Body != nil && c.ContentType() == "application/json" {
+			rawBody, _ := io.ReadAll(io.LimitReader(c.Request.Body, cfg.MaxBodyBytes))
+			c.Request.Body = io.NopCloser(io.MultiReader(bytes.NewReader(rawBody), c.Request.Body))
 			body = redactJSON(rawBody)
 		}
 
-		ctx.Next()
+		c.Next()
 
 		// After Processing Request Sections
-		status := ctx.Writer.Status()
+		status := c.Writer.Status()
 		attributes := []any{
 			"request_id", requestID,
-			"method", ctx.Request.Method,
-			"path", ctx.Request.URL.Path,
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"route", c.FullPath(),
 			"status", status,
 			"duration_ms", time.Since(startTime).Milliseconds(),
-			"ip", ctx.ClientIP(),
+			"ip", c.ClientIP(),
 		}
 
-		if claims, err := utils.GetUserData(ctx); err == nil {
+		if claims, err := utils.GetUserData(c); err == nil {
 			attributes = append(attributes, "user_id", claims.UserID, "username", claims.Username)
 		} else {
 			attributes = append(attributes, "user_id", nil, "username", "Guest")
 		}
 
-		if query := ctx.Request.URL.Query(); len(query) > 0 {
+		if query := c.Request.URL.Query(); len(query) > 0 {
 			attributes = append(attributes, "query_params", redactQuery(query))
 		}
 
@@ -75,8 +76,8 @@ func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
 			attributes = append(attributes, "body", body)
 		}
 
-		if len(ctx.Errors) > 0 {
-			attributes = append(attributes, "errors", ctx.Errors.Last().Error())
+		if len(c.Errors) > 0 {
+			attributes = append(attributes, "errors", c.Errors.Last().Error())
 		}
 
 		logLevel := slog.LevelInfo
@@ -87,7 +88,7 @@ func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
 		case status >= 400:
 			logLevel = slog.LevelWarn
 		}
-		slog.Log(ctx.Request.Context(), logLevel, "http request", attributes...)
+		slog.Log(c.Request.Context(), logLevel, "http request", attributes...)
 	}
 }
 
