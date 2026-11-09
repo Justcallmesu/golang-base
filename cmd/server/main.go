@@ -51,7 +51,27 @@ func run() int {
 	}
 
 	// Initialize Gin engine and database connection
-	Engine := gin.Default()
+	Engine := gin.New()
+	Engine.Use(gin.Recovery())
+	Engine.Use(middleware.RequestLogger(middleware.LoggerConfig{
+		LogBody:      true,
+		MaxBodyBytes: 4 << 10,
+		SkipPaths:    map[string]struct{}{"/health": {}},
+	}))
+	Engine.Use(cors.New(
+		cors.Config{
+			AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"},
+			AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+			ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+			AllowCredentials: true,
+			AllowFiles:       true,
+			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+			MaxAge:           12 * time.Hour,
+		},
+	))
+
+	Engine.Use(middleware.ErrorHandler())
+
 	databaseConnection, databaseError := database.InitConnection()
 
 	if databaseError != nil {
@@ -87,19 +107,7 @@ func run() int {
 	var middlewares = app.NewMiddlewares(services)
 
 	// Cors
-	Engine.Use(cors.New(
-		cors.Config{
-			AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"},
-			AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-			ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-			AllowCredentials: true,
-			AllowFiles:       true,
-			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-			MaxAge:           12 * time.Hour,
-		},
-	))
 
-	Engine.Use(middleware.ErrorHandler())
 	routes.SetupRoutes(Engine, repositories, services, middlewares)
 
 	// Validator
