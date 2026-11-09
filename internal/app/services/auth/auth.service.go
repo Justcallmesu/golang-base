@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"golang.org/x/crypto/bcrypt"
 	dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	cookie_dtos "justcallmesu.com/golang-base/internal/app/dtos/cookie"
 	"justcallmesu.com/golang-base/internal/app/models"
@@ -33,13 +34,19 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 	foundUser, loginError := service.userRepository.FindUserByUsername(credentials.Username, context)
 
 	if loginError != nil {
-		return nil, nil, nil, fmt.Errorf("user or password doesnt match")
+		if apperror.IsKind(loginError, apperror.KindNotFound) {
+			return nil, nil, nil, apperror.Unauthorized("user or password is incorrect")
+		}
+		return nil, nil, nil, loginError
 	}
 
 	loginError = foundUser.ComparePassword(credentials.Password)
 
 	if loginError != nil {
-		return nil, nil, nil, fmt.Errorf("user or password doesnt match")
+		if errors.Is(loginError, bcrypt.ErrMismatchedHashAndPassword) {
+			return nil, nil, nil, apperror.Unauthorized("user or password is incorrect")
+		}
+		return nil, nil, nil, loginError
 	}
 
 	// Generate JWT token
