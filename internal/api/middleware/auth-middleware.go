@@ -41,7 +41,11 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 		refreshToken, err := context.Cookie(middleware.CookieService.RefreshTokenName)
 
 		if err != nil || refreshToken == "" {
-			middleware.CookieService.ResetTokenCookies(context)
+			if err = middleware.CookieService.ResetTokenCookies(context); err != nil {
+				context.Error(err)
+				context.Abort()
+				return
+			}
 			middleware.unauthorized(context, "")
 			return
 		}
@@ -50,7 +54,11 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 
 		if err != nil {
 			if apperror.IsKind(err, apperror.KindUnauthorized) {
-				middleware.CookieService.ResetTokenCookies(context)
+				if err = middleware.CookieService.ResetTokenCookies(context); err != nil {
+					context.Error(err)
+					context.Abort()
+					return
+				}
 				middleware.unauthorized(context, "")
 				return
 			}
@@ -63,7 +71,11 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 		claims, err := middleware.JWTService.ParseToken(rotatedTokens.AccessToken, types.AccessTokenType)
 
 		if err != nil {
-			middleware.CookieService.ResetTokenCookies(context)
+			if err = middleware.CookieService.ResetTokenCookies(context); err != nil {
+				context.Error(err)
+				context.Abort()
+				return
+			}
 			middleware.unauthorized(context, "")
 			return
 		}
