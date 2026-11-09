@@ -99,16 +99,3 @@ func (service *Service) GenerateTokenCookies(context *gin.Context, tokenCookie *
 func (service *Service) isSecureRequest(context *gin.Context) bool {
 	return context.Request.URL.Scheme == "https" || context.Request.TLS != nil
 }
-
-func (service *Service) generateCookie(name, value string, maxAge int, context *gin.Context) *http.Cookie {
-	return &http.Cookie{
-		Name:     name,
-		Value:    value,
-		MaxAge:   maxAge,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   service.isSecureRequest(context),
-		SameSite: http.SameSiteLaxMode,
-	}
-
-}
