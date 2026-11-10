@@ -43,6 +43,7 @@ func run() int {
 
 	// Get environment variables
 	appPort := utils.GetEnv("APP_PORT", "3000")
+	appEnv := utils.GetEnv("APP_ENV", "development")
 	syncOnstart, parseErr := strconv.ParseBool(utils.GetEnv("DB_SYNC_ON_START", "false"))
 
 	if parseErr != nil {
@@ -57,6 +58,7 @@ func run() int {
 		LogBody:      true,
 		MaxBodyBytes: 4 << 10,
 		SkipPaths:    map[string]struct{}{"/health": {}},
+		Pretty:       appEnv == "development",
 	}))
 	Engine.Use(cors.New(
 		cors.Config{

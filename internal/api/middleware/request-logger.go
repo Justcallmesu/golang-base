@@ -22,6 +22,7 @@ type LoggerConfig struct {
 	LogBody      bool                // False in Prod
 	MaxBodyBytes int64               // e.g 4 Kb
 	SkipPaths    map[string]struct{} // Paths to skip logging
+	Pretty       bool                // Pretty print JSON logs
 }
 
 func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
@@ -52,32 +53,44 @@ func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
 
 		// After Processing Request Sections
 		status := c.Writer.Status()
-		attributes := []any{
-			"request_id", requestID,
-			"method", c.Request.Method,
-			"path", c.Request.URL.Path,
-			"route", c.FullPath(),
-			"status", status,
-			"duration_ms", time.Since(startTime).Milliseconds(),
-			"ip", c.ClientIP(),
+		entry := requestLog{
+			RequestID: requestID,
+			Method:    c.Request.Method,
+			Path:      c.Request.URL.Path,
+			Route:     c.FullPath(),
+			Status:    status,
+			IP:        c.ClientIP(),
+			Duration:  time.Since(startTime),
+			Username:  "",
+			UserID:    "",
+			Error:     "",
+			Query:     map[string]any{},
+			Body:      body,
 		}
 
 		if claims, err := utils.GetUserData(c); err == nil {
-			attributes = append(attributes, "user_id", claims.UserID, "username", claims.Username)
+			entry.UserID = claims.UserID.String()
+			entry.Username = claims.Username
 		} else {
-			attributes = append(attributes, "user_id", nil, "username", "Guest")
+			entry.UserID = "N/A"
+			entry.Username = "GUEST"
 		}
 
 		if query := c.Request.URL.Query(); len(query) > 0 {
-			attributes = append(attributes, "query_params", redactQuery(query))
+			entry.Query = redactQuery(query)
 		}
 
 		if body != nil {
-			attributes = append(attributes, "body", body)
+			entry.Body = body
 		}
 
 		if len(c.Errors) > 0 {
-			attributes = append(attributes, "errors", c.Errors.Last().Error())
+			entry.Error = c.Errors.Last().Error()
+		}
+
+		if cfg.Pretty {
+			printPretty(entry)
+			return
 		}
 
 		logLevel := slog.LevelInfo
@@ -88,6 +101,8 @@ func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
 		case status >= 400:
 			logLevel = slog.LevelWarn
 		}
+
+		attributes := entry.attributes()
 		slog.Log(c.Request.Context(), logLevel, "http request", attributes...)
 	}
 }
