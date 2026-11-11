@@ -48,35 +48,6 @@ func NewService() (*Service, error) {
 	}, nil
 }
 
-func (service *Service) GenerateRefreshCookies(context *gin.Context, refreshToken string) {
-	cookie := &http.Cookie{
-		Name:     service.RefreshTokenName,
-		Value:    refreshToken,
-		MaxAge:   int(service.refreshTokenExpiration.Seconds()),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   service.isSecureRequest(context), // Set to true if using HTTPS (recommended)
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	http.SetCookie(context.Writer, cookie)
-}
-
-func (service *Service) GenerateAccessCookies(context *gin.Context, accessToken string) {
-
-	cookie := &http.Cookie{
-		Name:     service.AccessTokenName,
-		Value:    accessToken,
-		MaxAge:   int(service.accessTokenExpiration.Seconds()),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   service.isSecureRequest(context), // Set to true if using HTTPS (recommended)
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	http.SetCookie(context.Writer, cookie)
-}
-
 func (service *Service) ResetTokenCookies(context *gin.Context) error {
 
 	context.SetCookie(service.RefreshTokenName, "", -1, "/", "", false, true)
@@ -88,11 +59,27 @@ func (service *Service) ResetTokenCookies(context *gin.Context) error {
 func (service *Service) GenerateTokenCookies(context *gin.Context, tokenCookie *cookie_dtos.TokenCookie) {
 
 	if tokenCookie.RefreshToken != "" {
-		service.GenerateRefreshCookies(context, tokenCookie.RefreshToken)
+		http.SetCookie(context.Writer, &http.Cookie{
+			Name:     service.RefreshTokenName,
+			Value:    tokenCookie.RefreshToken,
+			MaxAge:   int(service.refreshTokenExpiration.Seconds()),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   service.isSecureRequest(context), // Set to true if using HTTPS (recommended)
+			SameSite: http.SameSiteLaxMode,
+		})
 	}
 
 	if tokenCookie.AccessToken != "" {
-		service.GenerateAccessCookies(context, tokenCookie.AccessToken)
+		http.SetCookie(context.Writer, &http.Cookie{
+			Name:     service.AccessTokenName,
+			Value:    tokenCookie.AccessToken,
+			MaxAge:   int(service.accessTokenExpiration.Seconds()),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   service.isSecureRequest(context), // Set to true if using HTTPS (recommended)
+			SameSite: http.SameSiteLaxMode,
+		})
 	}
 }
 
