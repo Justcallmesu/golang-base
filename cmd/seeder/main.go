@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"justcallmesu.com/golang-base/internal/common/logger"
+	"justcallmesu.com/golang-base/internal/common/utils"
 	"justcallmesu.com/golang-base/internal/config"
 	"justcallmesu.com/golang-base/internal/database"
 	"justcallmesu.com/golang-base/internal/database/seeds"
@@ -19,6 +21,9 @@ func main() {
 		slog.Error("Error loading configuration", "error", configError)
 		os.Exit(1)
 	}
+
+	appEnv := utils.GetEnv("APP_ENV", "development")
+	slog.SetDefault(logger.New(appEnv))
 
 	database, databaseError := database.InitConnection()
 
@@ -46,15 +51,15 @@ func main() {
 		slog.Info("Database connection closed successfully")
 	}()
 
-	logger := log.NewWithOptions(os.Stderr, log.Options{
+	seedLogger := log.NewWithOptions(os.Stderr, log.Options{
 		ReportCaller:    false,
 		ReportTimestamp: true,
 		TimeFormat:      time.StampMilli,
 	})
 
-	seeds.PermissionSeeder(database, logger)
-	seeds.RoleSeeder(database, logger)
-	seeds.RolePermissionSeeder(database, logger)
-	seeds.UserSeeder(database, logger)
+	seeds.PermissionSeeder(database, seedLogger)
+	seeds.RoleSeeder(database, seedLogger)
+	seeds.RolePermissionSeeder(database, seedLogger)
+	seeds.UserSeeder(database, seedLogger)
 
 }

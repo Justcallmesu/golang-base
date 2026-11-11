@@ -15,7 +15,7 @@ import (
 var (
 	prettyDim     = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	prettyBold    = lipgloss.NewStyle().Bold(true)
-	prettyLabel   = lipgloss.NewStyle().Bold(true).Width(9)
+	prettyLabel   = lipgloss.NewStyle().Bold(true).Width(18).Foreground(lipgloss.Color("8"))
 	prettySection = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11"))
 	prettyDivider = prettyDim.Render(strings.Repeat("-", 64))
 )
@@ -107,7 +107,7 @@ func printPretty(r requestLog) {
 	row("User / User ID", fmt.Sprintf("%s / %s", r.Username, r.UserID))
 	row("IP", r.IP)
 	row("time", time.Now().Format("2006-01-01 15:04:05"))
-	row("ReqID", prettyDim.Render(r.RequestID))
+	row("Request ID", prettyDim.Render(r.RequestID))
 
 	if len(r.Query) > 0 {
 		fmt.Fprintf(&b, "\n %s\n", prettySection.Render("🔎 QUERY"))

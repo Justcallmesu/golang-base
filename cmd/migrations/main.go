@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"os"
 
+	"justcallmesu.com/golang-base/internal/common/logger"
+	"justcallmesu.com/golang-base/internal/common/utils"
 	"justcallmesu.com/golang-base/internal/config"
 	"justcallmesu.com/golang-base/internal/database"
 )
@@ -16,6 +18,10 @@ func main() {
 		slog.Error("Error loading configuration", "error", configError)
 		os.Exit(1)
 	}
+
+	appEnv := utils.GetEnv("APP_ENV", "development")
+
+	slog.SetDefault(logger.New(appEnv))
 
 	dbConnection, databaseError := database.InitConnection()
 

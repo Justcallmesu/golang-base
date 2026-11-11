@@ -22,6 +22,7 @@ import (
 	"justcallmesu.com/golang-base/internal/api/middleware"
 	"justcallmesu.com/golang-base/internal/api/routes"
 	"justcallmesu.com/golang-base/internal/app"
+	"justcallmesu.com/golang-base/internal/common/logger"
 	"justcallmesu.com/golang-base/internal/common/utils"
 	"justcallmesu.com/golang-base/internal/config"
 	"justcallmesu.com/golang-base/internal/database"
@@ -45,6 +46,8 @@ func run() int {
 	appPort := utils.GetEnv("APP_PORT", "3000")
 	appEnv := utils.GetEnv("APP_ENV", "development")
 	syncOnstart, parseErr := strconv.ParseBool(utils.GetEnv("DB_SYNC_ON_START", "false"))
+
+	slog.SetDefault(logger.New(appEnv))
 
 	if parseErr != nil {
 		slog.Error("Error parsing DB_SYNC_ON_START", "error", parseErr)
