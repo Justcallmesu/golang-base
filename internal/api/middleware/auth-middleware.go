@@ -32,7 +32,7 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 
 		if access, err := context.Cookie(middleware.CookieService.AccessTokenName); err == nil {
 			if claims, err := middleware.JWTService.ParseToken(access, types.AccessTokenType); err == nil {
-				context.Set("UserData", claims)
+				context.Set(utils.UserDataKey, claims)
 				context.Next()
 				return
 			}
@@ -80,7 +80,7 @@ func (middleware *AuthMiddleware) EnsureSessionIsValid() gin.HandlerFunc {
 			return
 		}
 
-		context.Set("UserData", claims)
+		context.Set(utils.UserDataKey, claims)
 
 		context.Next()
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 func GetUserData(context *gin.Context) (*types.JWTClaims, error) {
-	claims, isExist := context.Get("UserData")
+	claims, isExist := context.Get(UserDataKey)
 
 	if !isExist || claims == nil {
 		return nil, fmt.Errorf("unauthorized, please login")
