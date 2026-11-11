@@ -33,9 +33,7 @@ func RequestLogger(cfg LoggerConfig) gin.HandlerFunc {
 		}
 
 		startTime := time.Now()
-		requestID := c.GetHeader("X-Request-ID")
-
-		requestID = uuid.NewString()
+		requestID := uuid.NewString()
 
 		c.Set(utils.RequestIDKey, requestID)
 		c.Header("X-Request-ID", requestID)
