@@ -56,6 +56,11 @@ func run() int {
 
 	// Initialize Gin engine and database connection
 	Engine := gin.New()
+	if err := Engine.SetTrustedProxies(nil); err != nil {
+		slog.Error("Error setting trusted proxies", "error", err)
+		return 1
+	}
+
 	Engine.Use(gin.Recovery())
 	Engine.Use(middleware.RequestLogger(middleware.LoggerConfig{
 		LogBody:      true,
