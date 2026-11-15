@@ -117,7 +117,6 @@ func run() int {
 	var middlewares = app.NewMiddlewares(services)
 
 	// Cors
-
 	routes.SetupRoutes(Engine, repositories, services, middlewares)
 
 	// Validator

@@ -43,6 +43,8 @@ func statusOf(k apperror.Kind) int {
 		return http.StatusConflict
 	case apperror.KindUnprocessableEntity:
 		return http.StatusUnprocessableEntity
+	case apperror.KindTooManyRequests:
+		return http.StatusTooManyRequests
 	default:
 		return http.StatusInternalServerError
 	}

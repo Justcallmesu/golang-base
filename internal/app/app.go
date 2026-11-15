@@ -76,6 +76,7 @@ func NewServices(Repositories *Repositories) (*Services, error) {
 }
 
 func NewMiddlewares(Services *Services) *Middlewares {
+
 	return &Middlewares{
 		AuthMiddleware: middleware.NewAuthMiddleware(Services.AuthService, Services.JWTService, Services.CookieService),
 	}

@@ -15,6 +15,7 @@ const (
 	KindNotFound
 	KindConflict
 	KindUnprocessableEntity
+	KindTooManyRequests
 )
 
 type Error struct {
@@ -88,6 +89,13 @@ func Validation(details any) *Error {
 		Kind:    KindBadRequest,
 		Message: "Validation Error",
 		Details: details,
+	}
+}
+
+func TooManyRequests(message string) *Error {
+	return &Error{
+		Kind:    KindTooManyRequests,
+		Message: message,
 	}
 }
 
