@@ -1,6 +1,7 @@
 package auth_handler
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 	"justcallmesu.com/golang-base/internal/api/response"
 	auth_dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
@@ -36,6 +38,9 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 
 	if loginError != nil {
 		context.Error(loginError)
+		if apperror.IsKind(loginError, apperror.KindUnauthorized) {
+			slog.Warn("login failed", "username", credentials.Username, "ip", context.ClientIP(), "request_id", context.GetString(utils.RequestIDKey))
+		}
 		return
 	}
 	handler.cookieService.GenerateTokenCookies(context, tokens)
