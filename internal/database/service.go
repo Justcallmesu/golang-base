@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -43,12 +44,12 @@ func InitConnection() (*gorm.DB, error) {
 func CloseConnection(database *gorm.DB) error {
 	sqlDB, err := database.DB()
 	if err != nil {
-		return fmt.Errorf("failed to get database instance: %v", err)
+		return fmt.Errorf("failed to get database instance: %w", err)
 	}
 
 	err = sqlDB.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close database connection: %v", err)
+		return fmt.Errorf("failed to close database connection: %w", err)
 	}
 
 	slog.Info("Database connection closed successfully")
@@ -59,13 +60,13 @@ func ConnectSQL() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SQL database DSN: %v", err)
+		return nil, fmt.Errorf("failed to get SQL database DSN: %w", err)
 	}
 
 	database, err := gorm.Open(mysql.Open(dsn), gormConfig)
 
 	if err != nil {
-		return nil, fmt.Errorf("SQL database connection failed: %v", err)
+		return nil, fmt.Errorf("SQL database connection failed: %w", err)
 	}
 
 	return database, nil
@@ -75,13 +76,13 @@ func ConnectPostgres() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Postgres database DSN: %v", err)
+		return nil, fmt.Errorf("failed to get Postgres database DSN: %w", err)
 	}
 
 	database, err := gorm.Open(postgres.Open(dsn), gormConfig)
 
 	if err != nil {
-		return nil, fmt.Errorf("postgres database connection failed: %v", err)
+		return nil, fmt.Errorf("postgres database connection failed: %w", err)
 	}
 
 	return database, nil
@@ -114,7 +115,7 @@ func GetDatabaseDSN() (string, error) {
 			databaseName,
 		), nil
 	default:
-		return "", fmt.Errorf("unsupported database type, supported types are: mysql, postgres")
+		return "", errors.New("unsupported database type, supported types are: mysql, postgres")
 	}
 }
 
@@ -129,7 +130,7 @@ func Migrations(database *gorm.DB) error {
 	)
 
 	if migrateError != nil {
-		return fmt.Errorf("error during migration: %v", migrateError)
+		return fmt.Errorf("error during migration: %w", migrateError)
 	}
 
 	slog.Info("Migrations completed.")
