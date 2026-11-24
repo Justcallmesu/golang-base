@@ -35,7 +35,7 @@ func UserSeeder(database *gorm.DB, logger *log.Logger) {
 		for _, userSeeder := range Users {
 			logger.Warnf("Seeding user %s", userSeeder.Username)
 
-			var user models.User = *userSeeder.User
+			var user = *userSeeder.User
 
 			if user.Username == "admin" {
 				password, err := HandleAdminPassword(user.Password)

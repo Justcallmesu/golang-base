@@ -20,7 +20,7 @@ func NewHandler(userService *user_service.Service) *Handler {
 }
 
 func (handler *Handler) FindAllUsers(context *gin.Context) {
-	var queryParams user_dtos.UserQueryDto = user_dtos.UserQueryDto{
+	var queryParams = user_dtos.UserQueryDto{
 		PaginationQueryParams: types.NewPaginationQueryParams(),
 	}
 

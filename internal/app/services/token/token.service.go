@@ -28,12 +28,12 @@ type Service struct {
 func NewService() (*Service, error) {
 	accessTokenExpiration, err := strconv.ParseInt(utils.GetEnv("JWT_ACCESS_EXPIRATION", "15"), 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing JWT_ACCESS_EXPIRATION: %w", err)
+		return nil, fmt.Errorf("error parsing JWT_ACCESS_EXPIRATION: %w", err)
 	}
 
 	refreshTokenExpiration, err := strconv.ParseInt(utils.GetEnv("JWT_REFRESH_EXPIRATION", "24"), 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("Error parsing JWT_REFRESH_EXPIRATION: %w", err)
+		return nil, fmt.Errorf("error parsing JWT_REFRESH_EXPIRATION: %w", err)
 	}
 
 	issuer := utils.GetEnv("APP_NAME", "MyApp")

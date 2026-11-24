@@ -43,12 +43,12 @@ func InitConnection() (*gorm.DB, error) {
 func CloseConnection(database *gorm.DB) error {
 	sqlDB, err := database.DB()
 	if err != nil {
-		return fmt.Errorf("Failed to get database instance: %v", err)
+		return fmt.Errorf("failed to get database instance: %v", err)
 	}
 
 	err = sqlDB.Close()
 	if err != nil {
-		return fmt.Errorf("Failed to close database connection: %v", err)
+		return fmt.Errorf("failed to close database connection: %v", err)
 	}
 
 	slog.Info("Database connection closed successfully")
@@ -59,7 +59,7 @@ func ConnectSQL() (*gorm.DB, error) {
 	dsn, err := GetDatabaseDSN()
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get SQL database DSN: %v", err)
+		return nil, fmt.Errorf("failed to get SQL database DSN: %v", err)
 	}
 
 	database, err := gorm.Open(mysql.Open(dsn), gormConfig)
@@ -114,7 +114,7 @@ func GetDatabaseDSN() (string, error) {
 			databaseName,
 		), nil
 	default:
-		return "", fmt.Errorf("Unsupported database type, supported types are: mysql, postgres")
+		return "", fmt.Errorf("unsupported database type, supported types are: mysql, postgres")
 	}
 }
 
@@ -129,7 +129,7 @@ func Migrations(database *gorm.DB) error {
 	)
 
 	if migrateError != nil {
-		return fmt.Errorf("Error during migration: %v", migrateError)
+		return fmt.Errorf("error during migration: %v", migrateError)
 	}
 
 	slog.Info("Migrations completed.")

@@ -9,7 +9,7 @@ import (
 type UUID struct{ uuid.UUID }
 
 func (UUID) GormDBDataType(db *gorm.DB, _ *schema.Field) string {
-	switch db.Dialector.Name() {
+	switch db.Name() {
 	case "postgres":
 		return "uuid"
 	default:

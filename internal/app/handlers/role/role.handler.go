@@ -19,7 +19,7 @@ func NewHandler(roleService *role_service.Service) *Handler {
 }
 
 func (handler *Handler) FindAllRoles(context *gin.Context) {
-	var queryParams role_dto.RoleQueryDto = role_dto.RoleQueryDto{
+	var queryParams = role_dto.RoleQueryDto{
 		PaginationQueryParams: types.NewPaginationQueryParams(),
 	}
 
