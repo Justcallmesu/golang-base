@@ -35,6 +35,7 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 
 	if loginError != nil {
 		if apperror.IsKind(loginError, apperror.KindNotFound) {
+			models.CompareDummyPassword(credentials.Password)
 			return nil, nil, nil, apperror.Unauthorized("user or password is incorrect")
 		}
 		return nil, nil, nil, loginError

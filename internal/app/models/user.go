@@ -8,6 +8,10 @@ import (
 	"justcallmesu.com/golang-base/internal/common/types"
 )
 
+const passwordHashCost = 10
+
+var dummyPasswordHash, _ = bcrypt.GenerateFromPassword([]byte("asdgasdjkasada"), passwordHashCost)
+
 type User struct {
 	types.BaseSoftDeleteModel
 
@@ -30,7 +34,7 @@ func (user *User) SetPassword(password string) error {
 		return errors.New("password cannot be empty")
 	}
 
-	encryptedBytes, encryptionError := bcrypt.GenerateFromPassword([]byte(password), 10)
+	encryptedBytes, encryptionError := bcrypt.GenerateFromPassword([]byte(password), passwordHashCost)
 
 	if encryptionError != nil {
 		return encryptionError
@@ -42,4 +46,10 @@ func (user *User) SetPassword(password string) error {
 
 func (user *User) ComparePassword(candidatePassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(candidatePassword))
+}
+
+// CompareDummyPassword takes as long as ComparePassword but always fails.
+// Call it when the user does not exist so response time can't reveal which usernames exist.
+func CompareDummyPassword(candidatePassword string) {
+	_ = bcrypt.CompareHashAndPassword(dummyPasswordHash, []byte(candidatePassword))
 }
