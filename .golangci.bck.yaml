@@ -1,4 +1,0 @@
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - (*github.com/gin-gonic/gin.Context).Error
