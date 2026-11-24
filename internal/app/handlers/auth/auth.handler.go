@@ -103,6 +103,20 @@ func (handler *AuthHandler) ChangePassword(context *gin.Context) {
 
 func (handler *AuthHandler) Logout(context *gin.Context) {
 
+	userData, getError := utils.GetUserData(context)
+
+	if getError != nil {
+		context.Error(getError)
+		return
+	}
+
+	incrementTokenVersionError := handler.service.Logout(context.Request.Context(), userData.UserID)
+
+	if incrementTokenVersionError != nil {
+		context.Error(incrementTokenVersionError)
+		return
+	}
+
 	resetTokenError := handler.cookieService.ResetTokenCookies(context)
 
 	if resetTokenError != nil {

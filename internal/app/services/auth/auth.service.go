@@ -3,7 +3,6 @@ package auth_service
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 	dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
@@ -52,11 +51,11 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 
 	// Generate JWT token
 
-	accessToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.AccessTokenType)
+	accessToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.AccessTokenType, foundUser.TokenVersion)
 	if loginError != nil {
 		return nil, nil, nil, loginError
 	}
-	refreshToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.RefreshTokenType)
+	refreshToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.RefreshTokenType, foundUser.TokenVersion)
 
 	if loginError != nil {
 		return nil, nil, nil, loginError
@@ -81,7 +80,10 @@ func (service *Service) ChangePassword(context context.Context, passwords *dtos.
 	compareError := foundUser.ComparePassword(passwords.OldPassword)
 
 	if compareError != nil {
-		return fmt.Errorf("old password is incorrect")
+		if errors.Is(compareError, bcrypt.ErrMismatchedHashAndPassword) {
+			return apperror.BadRequest("old password is incorrect")
+		}
+		return compareError
 	}
 
 	setError := foundUser.SetPassword(passwords.NewPassword)
@@ -94,6 +96,12 @@ func (service *Service) ChangePassword(context context.Context, passwords *dtos.
 
 	if updateError != nil {
 		return updateError
+	}
+
+	incrementTokenError := service.userRepository.IncrementTokenVersion(context, foundUser.ID)
+
+	if incrementTokenError != nil {
+		return incrementTokenError
 	}
 
 	return nil
@@ -114,7 +122,8 @@ func (service *Service) GetMe(context context.Context, userData *types.JWTClaims
 
 func (service *Service) RefreshTokens(context context.Context, refreshToken string) (*cookie_dtos.TokenCookie, error) {
 	var claims *types.JWTClaims
-	var claimsError error
+	var claimsError, err error
+	var foundUser *models.User
 
 	claims, claimsError = service.jwtService.ParseToken(refreshToken, types.RefreshTokenType)
 
@@ -122,7 +131,7 @@ func (service *Service) RefreshTokens(context context.Context, refreshToken stri
 		return nil, apperror.Unauthorized("invalid refresh token")
 	}
 
-	if _, err := service.userRepository.FindUserByID(claims.UserID, context); err != nil {
+	if foundUser, err = service.userRepository.FindUserByID(claims.UserID, context); err != nil {
 		if apperror.IsKind(err, apperror.KindNotFound) {
 			return nil, apperror.Unauthorized("user no longer exists")
 		}
@@ -130,12 +139,16 @@ func (service *Service) RefreshTokens(context context.Context, refreshToken stri
 		return nil, err
 	}
 
-	accessToken, accessTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.AccessTokenType)
+	if claims.TokenVersion != foundUser.TokenVersion {
+		return nil, apperror.Unauthorized("session revoked")
+	}
+
+	accessToken, accessTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.AccessTokenType, foundUser.TokenVersion)
 	if accessTokenGenerateError != nil {
 		return nil, apperror.Internal(accessTokenGenerateError)
 	}
 
-	refreshToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.RefreshTokenType)
+	refreshToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.RefreshTokenType, foundUser.TokenVersion)
 
 	if refreshTokenGenerateError != nil {
 		return nil, apperror.Internal(refreshTokenGenerateError)
@@ -160,4 +173,8 @@ func (s *Service) HasPermission(ctx context.Context, userID types.UUID, code mod
 	}
 
 	return foundUser.Role.HasPermission(code), nil
+}
+
+func (s *Service) Logout(ctx context.Context, userID types.UUID) error {
+	return s.userRepository.IncrementTokenVersion(ctx, userID)
 }

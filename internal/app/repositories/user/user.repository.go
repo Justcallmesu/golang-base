@@ -116,6 +116,11 @@ func (repository *Repository) DeleteUser(userId types.UUID, context context.Cont
 	return repository.handleDatabaseError(err)
 }
 
+func (repository *Repository) IncrementTokenVersion(ctx context.Context, userID types.UUID) error {
+	return repository.handleDatabaseError(repository.database.WithContext(ctx).Model(&models.User{}).Where("id = ?", userID).UpdateColumn("token_version", gorm.Expr("token_version + ?", 1)).Error)
+
+}
+
 func (repository *Repository) handleDatabaseError(err error) error {
 	if err == nil {
 		return nil

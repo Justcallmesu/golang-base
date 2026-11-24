@@ -74,6 +74,15 @@ func (service *Service) UpdateUser(context context.Context, updateUserDto *user_
 		return nil, updateError
 	}
 
+	// After updating the user, if the password was changed, we need to increment the token version to invalidate existing tokens.
+	if updateUserDto.Password != nil {
+		incrementError := service.userRepository.IncrementTokenVersion(context, user.ID)
+
+		if incrementError != nil {
+			return nil, incrementError
+		}
+	}
+
 	return user, nil
 }
 

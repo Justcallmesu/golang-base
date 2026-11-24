@@ -21,8 +21,9 @@ type User struct {
 	FullName string `json:"fullName,omitempty" gorm:"index"`
 
 	// Security & Authentication
-	Password    string     `json:"-" gorm:"not null"`
-	LastLoginAt *time.Time `json:"lastLoginAt,omitempty"`
+	Password     string     `json:"-" gorm:"not null"`
+	LastLoginAt  *time.Time `json:"lastLoginAt,omitempty"`
+	TokenVersion int        `json:"-" gorm:"not null;default:0"`
 
 	// Relationships
 	RoleId *types.UUID `json:"roleId,omitempty,omitzero"`

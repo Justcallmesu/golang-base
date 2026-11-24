@@ -60,7 +60,7 @@ func NewService() (*Service, error) {
 	}, nil
 }
 
-func (service *Service) GenerateToken(userId types.UUID, username string, tokenType types.TokenType) (string, error) {
+func (service *Service) GenerateToken(userId types.UUID, username string, tokenType types.TokenType, tokenVersion int) (string, error) {
 	var generateError error
 	var token *jwt.Token
 	var signedToken, secret string
@@ -77,7 +77,7 @@ func (service *Service) GenerateToken(userId types.UUID, username string, tokenT
 		return "", apperror.Internal(errors.New("invalid token type"))
 	}
 
-	claims := service.NewJwtClaims(userId, username, service.issuer, expiresAt.Time)
+	claims := service.NewJwtClaims(userId, username, service.issuer, expiresAt.Time, tokenVersion)
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signedToken, generateError = token.SignedString([]byte(secret))
@@ -131,10 +131,11 @@ func (service *Service) ParseToken(tokenString string, tokenType types.TokenType
 	return parsedClaims, nil
 }
 
-func (service *Service) NewJwtClaims(userId types.UUID, username, issuer string, expiresAt time.Time) *types.JWTClaims {
+func (service *Service) NewJwtClaims(userId types.UUID, username, issuer string, expiresAt time.Time, tokenVersion int) *types.JWTClaims {
 	return &types.JWTClaims{
-		UserID:   userId,
-		Username: username,
+		UserID:       userId,
+		Username:     username,
+		TokenVersion: tokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

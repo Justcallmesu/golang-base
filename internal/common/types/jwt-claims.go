@@ -12,7 +12,8 @@ const (
 )
 
 type JWTClaims struct {
-	UserID   UUID   `json:"userId"`
-	Username string `json:"username"`
+	UserID       UUID   `json:"userId"`
+	Username     string `json:"username"`
+	TokenVersion int    `json:"tokenVersion"`
 	jwt.RegisteredClaims
 }
