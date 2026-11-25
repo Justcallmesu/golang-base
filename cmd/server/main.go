@@ -62,6 +62,7 @@ func run() int {
 	}
 
 	Engine.Use(gin.Recovery())
+	Engine.Use(middleware.SecurityHeaders())
 	Engine.Use(middleware.RequestLogger(middleware.LoggerConfig{
 		LogBody:      true,
 		MaxBodyBytes: 4 << 10,
