@@ -3,6 +3,7 @@ package role_handler
 import (
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/api/request"
+	"justcallmesu.com/golang-base/internal/api/response"
 	role_dto "justcallmesu.com/golang-base/internal/app/dtos/role"
 	role_service "justcallmesu.com/golang-base/internal/app/services/role"
 	"justcallmesu.com/golang-base/internal/common/types"
@@ -35,7 +36,7 @@ func (handler *Handler) FindAllRoles(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, paginatedResponse)
+	context.JSON(200, response.NewResponse("success", true, paginatedResponse))
 }
 
 func (handler *Handler) GetRoleById(context *gin.Context) {
