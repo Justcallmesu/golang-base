@@ -26,7 +26,7 @@ func Paginate[T any](database *gorm.DB, page int, pageSize int) (*types.Paginate
 	}
 
 	return &types.PaginatedResponse[T]{
-		Data: items,
+		Items: items,
 		Meta: types.PaginationMetadata{
 			CurrentPage: page,
 			PageSize:    pageSize,
