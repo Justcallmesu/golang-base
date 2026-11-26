@@ -18,7 +18,7 @@ type BaseSoftDeleteModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deletedAt,omitempty"`
 }
 
-func (m *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
+func (m *BaseModel) BeforeCreate(tx *gorm.DB) error {
 	if m.ID.UUID == uuid.Nil {
 		newID, err := NewUUID()
 		if err != nil {
