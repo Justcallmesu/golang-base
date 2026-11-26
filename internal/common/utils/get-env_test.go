@@ -6,6 +6,7 @@ import (
 
 func TestGetEnv(t *testing.T) {
 	t.Setenv("APP_ENV", "development") // Set an environment variable for testing
+	t.Setenv("EMPTY_VAR", "")
 
 	testCases := []struct {
 		name         string
@@ -25,6 +26,12 @@ func TestGetEnv(t *testing.T) {
 			defaultValue: "default_value",
 			expected:     "default_value",
 		},
+		{
+			name:         "empty environment variable",
+			key:          "EMPTY_VAR",
+			defaultValue: "default_value",
+			expected:     "default_value",
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -32,7 +39,7 @@ func TestGetEnv(t *testing.T) {
 			value := GetEnv(testCase.key, testCase.defaultValue)
 
 			if value != testCase.expected {
-				t.Errorf("GetEnv(%q, %q); want %q", testCase.key, testCase.defaultValue, testCase.expected)
+				t.Errorf("GetEnv(%q, %q) = %q; want %q", testCase.key, value, testCase.defaultValue, testCase.expected)
 			}
 		})
 
