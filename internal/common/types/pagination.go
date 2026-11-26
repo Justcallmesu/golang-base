@@ -1,7 +1,7 @@
 package types
 
 type PaginatedResponse[T any] struct {
-	Data []T                `json:"data"`
+	Items []T                `json:"data"`
 	Meta PaginationMetadata `json:"meta"`
 }
 
