@@ -6,5 +6,5 @@ import (
 
 type UserQueryDto struct {
 	types.PaginationQueryParams
-	RoleId *types.UUID `form:"roleId"`
+	RoleId string `form:"roleId" binding:"omitempty,uuid"`
 }
