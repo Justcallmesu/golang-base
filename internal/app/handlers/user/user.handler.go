@@ -8,7 +8,9 @@ import (
 	"justcallmesu.com/golang-base/internal/api/response"
 	user_dtos "justcallmesu.com/golang-base/internal/app/dtos/user"
 	user_service "justcallmesu.com/golang-base/internal/app/services/user"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
+	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 type Handler struct {
@@ -107,6 +109,18 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 
 	if err != nil {
 		context.Error(err)
+		return
+	}
+
+	currentUser, err := utils.GetUserData(context)
+
+	if err != nil {
+		context.Error(err)
+		return
+	}
+
+	if currentUser.UserID.String() == userId.String() {
+		context.Error(apperror.BadRequest("you cannot delete your own account"))
 		return
 	}
 
