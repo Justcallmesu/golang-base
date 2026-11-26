@@ -38,7 +38,7 @@ func (handler *Handler) FindAllUsers(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, response.NewResponse("success", true, paginatedResponse))
+	context.JSON(http.StatusOK, response.NewResponse("Users retrieved successfully", true, paginatedResponse))
 }
 
 func (handler *Handler) GetUserById(context *gin.Context) {

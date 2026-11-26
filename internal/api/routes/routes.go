@@ -1,10 +1,12 @@
 package routes
 
 import (
-	"time"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"justcallmesu.com/golang-base/internal/api/response"
 	"justcallmesu.com/golang-base/internal/app"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 )
 
 func SetupRoutes(ginEngine *gin.Engine,
@@ -12,17 +14,9 @@ func SetupRoutes(ginEngine *gin.Engine,
 	services *app.Services,
 	middlewares *app.Middlewares,
 ) {
-	var startTime = time.Now()
-
 	// Index Route
 	ginEngine.GET("/", func(context *gin.Context) {
-		context.JSON(200, gin.H{
-			"message": "Server Is Up And Running",
-			"status":  "success",
-			"data": gin.H{
-				"server-runtime": time.Since(startTime).Truncate(time.Second).String(),
-			},
-		})
+		context.JSON(http.StatusOK, response.NewResponse("🚀 Server up and running, for server health checking use /health", true, nil))
 	})
 
 	apiRoutes := ginEngine.Group("/api")
@@ -32,10 +26,8 @@ func SetupRoutes(ginEngine *gin.Engine,
 	v1Routes.Use(middlewares.AuthMiddleware.EnsureSessionIsValid())
 	UserRoutes(v1Routes, services, middlewares)
 	RoleRoutes(v1Routes, services, middlewares)
+
 	ginEngine.NoRoute(func(context *gin.Context) {
-		context.JSON(404, gin.H{
-			"message": "Route Not Found",
-			"status":  "error",
-		})
+		context.Error(apperror.NotFound("Route not found"))
 	})
 }

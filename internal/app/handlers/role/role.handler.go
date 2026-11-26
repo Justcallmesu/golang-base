@@ -38,7 +38,7 @@ func (handler *Handler) FindAllRoles(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, response.NewResponse("success", true, paginatedResponse))
+	context.JSON(http.StatusOK, response.NewResponse("Roles retrieved successfully", true, paginatedResponse))
 }
 
 func (handler *Handler) GetRoleById(context *gin.Context) {
@@ -56,5 +56,5 @@ func (handler *Handler) GetRoleById(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, response.NewResponse("success", true, role))
+	context.JSON(http.StatusOK, response.NewResponse("Role retrieved successfully", true, role))
 }
