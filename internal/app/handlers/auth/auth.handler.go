@@ -9,16 +9,10 @@ import (
 	"justcallmesu.com/golang-base/internal/api/request"
 	"justcallmesu.com/golang-base/internal/api/response"
 	auth_dtos "justcallmesu.com/golang-base/internal/app/dtos/auth"
-	"justcallmesu.com/golang-base/internal/app/models"
 	auth_service "justcallmesu.com/golang-base/internal/app/services/auth"
 	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/utils"
 )
-
-type LoginResponse struct {
-	User           *models.User             `json:"user"`
-	NavigationMenu *[]models.NavigationMenu `json:"navigationMenu"`
-}
 
 type AuthHandler struct {
 	service       *auth_service.Service
@@ -51,7 +45,7 @@ func (handler *AuthHandler) Login(context *gin.Context) {
 	}
 	handler.cookieService.GenerateTokenCookies(context, tokens)
 
-	context.JSON(http.StatusCreated, response.NewResponse("Login Success", true, LoginResponse{
+	context.JSON(http.StatusCreated, response.NewResponse("Login Success", true, auth_dtos.SessionResponse{
 		User:           userData,
 		NavigationMenu: navigationMenu,
 	}))
@@ -73,8 +67,9 @@ func (handler *AuthHandler) Me(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, response.NewResponse("User fetched successfully", true, gin.H{"user": userData,
-		"navigationMenu": navigationMenu,
+	context.JSON(http.StatusOK, response.NewResponse("User fetched successfully", true, auth_dtos.SessionResponse{
+		User:           userData,
+		NavigationMenu: navigationMenu,
 	}))
 
 }
