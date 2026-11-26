@@ -8,7 +8,9 @@ import (
 	"justcallmesu.com/golang-base/internal/api/response"
 	role_dto "justcallmesu.com/golang-base/internal/app/dtos/role"
 	role_service "justcallmesu.com/golang-base/internal/app/services/role"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
+	"justcallmesu.com/golang-base/internal/common/utils"
 )
 
 type Handler struct {
@@ -110,7 +112,19 @@ func (handler *Handler) DeleteRole(context *gin.Context) {
 		return
 	}
 
-	err := handler.roleService.DeleteRole(context.Request.Context(), roleId)
+	userData, err := utils.GetUserData(context)
+
+	if err != nil {
+		context.Error(err)
+		return
+	}
+
+	if userData.RoleID == roleId {
+		context.Error(apperror.BadRequest("you cannot delete your own role"))
+		return
+	}
+
+	err = handler.roleService.DeleteRole(context.Request.Context(), roleId)
 
 	if err != nil {
 		context.Error(err)
