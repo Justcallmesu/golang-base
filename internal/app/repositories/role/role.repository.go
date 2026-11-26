@@ -61,6 +61,30 @@ func (repository *Repository) FindByID(roleID types.UUID, context context.Contex
 	return &role, nil
 }
 
+func (repository *Repository) Create(role *models.Role, context context.Context) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
+		return transaction.Save(&role).Error
+	})
+
+	return repository.handleDatabaseError(err)
+}
+
+func (repository *Repository) Update(role *models.Role, context context.Context) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
+		return transaction.Save(&role).Error
+	})
+
+	return repository.handleDatabaseError(err)
+}
+
+func (repository *Repository) Delete(roleId types.UUID, context context.Context) error {
+	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
+		return transaction.Where("ID = ?", roleId).Delete(&models.Role{}).Error
+	})
+
+	return repository.handleDatabaseError(err)
+}
+
 func (repository *Repository) handleDatabaseError(err error) error {
 	if err == nil {
 		return nil
@@ -69,7 +93,8 @@ func (repository *Repository) handleDatabaseError(err error) error {
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		return apperror.NotFound("Role not found")
-
+	case errors.Is(err, gorm.ErrDuplicatedKey):
+		return apperror.Conflict("Role with the same name already exists")
 	}
 
 	return apperror.Internal(err)
