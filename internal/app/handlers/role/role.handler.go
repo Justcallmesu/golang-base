@@ -1,6 +1,8 @@
 package role_handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/api/request"
 	"justcallmesu.com/golang-base/internal/api/response"
@@ -36,7 +38,7 @@ func (handler *Handler) FindAllRoles(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, response.NewResponse("success", true, paginatedResponse))
+	context.JSON(http.StatusOK, response.NewResponse("success", true, paginatedResponse))
 }
 
 func (handler *Handler) GetRoleById(context *gin.Context) {
@@ -54,5 +56,5 @@ func (handler *Handler) GetRoleById(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, role)
+	context.JSON(http.StatusOK, response.NewResponse("success", true, role))
 }
