@@ -2,9 +2,11 @@ package models
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 )
 
 func TestComparePassword(t *testing.T) {
@@ -50,6 +52,16 @@ func TestComparePassword(t *testing.T) {
 			}
 
 		})
+	}
+}
+
+func TestSetPasswordWithLongPassword(t *testing.T) {
+	user := &User{}
+
+	err := user.SetPassword(strings.Repeat("é", 40))
+
+	if !apperror.IsKind(err, apperror.KindBadRequest) {
+		t.Errorf("SetPassword (80 bytes) error = %v, want KindBadRequest", err)
 	}
 }
 

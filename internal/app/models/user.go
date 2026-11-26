@@ -1,10 +1,10 @@
 package models
 
 import (
-	"errors"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
+	"justcallmesu.com/golang-base/internal/common/apperror"
 	"justcallmesu.com/golang-base/internal/common/types"
 )
 
@@ -32,11 +32,11 @@ type User struct {
 
 func (user *User) SetPassword(password string) error {
 	if password == "" {
-		return errors.New("password cannot be empty")
+		return apperror.BadRequest("password cannot be empty")
 	}
 
 	if len(password) > 72 {
-		return errors.New("password cannot be longer than 72 characters")
+		return apperror.BadRequest("password must be at most 72 bytes")
 	}
 
 	encryptedBytes, encryptionError := bcrypt.GenerateFromPassword([]byte(password), passwordHashCost)
