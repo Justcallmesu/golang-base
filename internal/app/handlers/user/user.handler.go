@@ -1,6 +1,8 @@
 package user_handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"justcallmesu.com/golang-base/internal/api/request"
 	"justcallmesu.com/golang-base/internal/api/response"
@@ -36,7 +38,7 @@ func (handler *Handler) FindAllUsers(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, response.NewResponse("success", true, paginatedResponse))
+	context.JSON(http.StatusOK, response.NewResponse("success", true, paginatedResponse))
 }
 
 func (handler *Handler) GetUserById(context *gin.Context) {
@@ -54,7 +56,7 @@ func (handler *Handler) GetUserById(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, response.NewResponse("User retrieved successfully", true, user))
+	context.JSON(http.StatusOK, response.NewResponse("User retrieved successfully", true, user))
 }
 
 func (handler *Handler) CreateUser(context *gin.Context) {
@@ -96,7 +98,7 @@ func (handler *Handler) UpdateUser(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, response.NewResponse("User updated successfully", true, user))
+	context.JSON(http.StatusOK, response.NewResponse("User updated successfully", true, user))
 
 }
 
@@ -115,5 +117,5 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 		return
 	}
 
-	context.JSON(200, response.NewResponse("User deleted successfully", true, nil))
+	context.JSON(http.StatusOK, response.NewResponse("User deleted successfully", true, nil))
 }
