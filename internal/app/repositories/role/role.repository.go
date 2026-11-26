@@ -79,7 +79,17 @@ func (repository *Repository) Update(role *models.Role, context context.Context)
 
 func (repository *Repository) Delete(roleId types.UUID, context context.Context) error {
 	err := repository.database.WithContext(context).Transaction(func(transaction *gorm.DB) error {
-		return transaction.Where("ID = ?", roleId).Delete(&models.Role{}).Error
+		result := transaction.Where("ID = ?", roleId).Delete(&models.Role{})
+
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		return nil
 	})
 
 	return repository.handleDatabaseError(err)
