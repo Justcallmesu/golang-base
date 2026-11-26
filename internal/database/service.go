@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
+	"net/url"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -99,21 +101,23 @@ func GetDatabaseDSN() (string, error) {
 
 	switch databaseType {
 	case MySQL:
-		return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-			databaseUser,
-			databasePassword,
-			databaseHost,
-			databasePort,
-			databaseName,
-		), nil
+		mysqlConfig := mysqldriver.NewConfig()
+		mysqlConfig.User = databaseUser
+		mysqlConfig.Passwd = databasePassword
+		mysqlConfig.Net = "tcp"
+		mysqlConfig.Addr = net.JoinHostPort(databaseHost, databasePort)
+		mysqlConfig.DBName = databaseName
+		mysqlConfig.ParseTime = true
+		return mysqlConfig.FormatDSN(), nil
 	case Postgres:
-		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-			databaseHost,
-			databasePort,
-			databaseUser,
-			databasePassword,
-			databaseName,
-		), nil
+		postgresURL := url.URL{
+			Scheme:   "postgres",
+			User:     url.UserPassword(databaseUser, databasePassword),
+			Host:     net.JoinHostPort(databaseHost, databasePort),
+			Path:     "/" + databaseName,
+			RawQuery: "sslmode=disable",
+		}
+		return postgresURL.String(), nil
 	default:
 		return "", errors.New("unsupported database type, supported types are: mysql, postgres")
 	}
