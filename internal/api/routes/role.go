@@ -17,4 +17,7 @@ func RoleRoutes(router *gin.RouterGroup, services *app.Services, middlewares *ap
 	// Routes
 	roleRouter.GET("", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_VIEW_ROLE), roleHandler.FindAllRoles)
 	roleRouter.GET(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_VIEW_ROLE), roleHandler.GetRoleById)
+	roleRouter.POST("", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_CREATE_ROLE), roleHandler.CreateRole)
+	roleRouter.PUT(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_UPDATE_ROLE), roleHandler.UpdateRole)
+	roleRouter.DELETE(":id", middlewares.AuthMiddleware.RequirePermission(models.PERMISSION_DELETE_ROLE), roleHandler.DeleteRole)
 }

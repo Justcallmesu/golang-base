@@ -26,3 +26,24 @@ func (service *Service) GetAllRoles(context context.Context, queryParams *role_d
 func (service *Service) GetRoleByID(context context.Context, roleID types.UUID) (*models.Role, error) {
 	return service.roleRepository.FindByID(roleID, context)
 }
+
+func (service *Service) CreateRole(context context.Context, roleDto *role_dto.CreateRoleDto) (*models.Role, error) {
+	role := roleDto.ToModel()
+
+	return role, service.roleRepository.Create(role, context)
+}
+
+func (service *Service) UpdateRole(context context.Context, roleDto *role_dto.UpdateRoleDto, roleID types.UUID) (*models.Role, error) {
+	role, err := service.roleRepository.FindByID(roleID, context)
+
+	if err != nil {
+		return nil, err
+	}
+
+	roleDto.ApplyTo(role)
+	return role, service.roleRepository.Update(role, context)
+}
+
+func (service *Service) DeleteRole(context context.Context, roleID types.UUID) error {
+	return service.roleRepository.Delete(roleID, context)
+}

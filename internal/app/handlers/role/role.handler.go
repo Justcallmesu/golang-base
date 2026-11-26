@@ -58,3 +58,64 @@ func (handler *Handler) GetRoleById(context *gin.Context) {
 
 	context.JSON(http.StatusOK, response.NewResponse("Role retrieved successfully", true, role))
 }
+
+func (handler *Handler) CreateRole(context *gin.Context) {
+	var createRoleDto role_dto.CreateRoleDto
+
+	if err := context.ShouldBindJSON(&createRoleDto); err != nil {
+		context.Error(request.BindError(err))
+		return
+	}
+
+	role, err := handler.roleService.CreateRole(context.Request.Context(), &createRoleDto)
+
+	if err != nil {
+		context.Error(err)
+		return
+	}
+
+	context.JSON(http.StatusCreated, response.NewResponse("Role created successfully", true, role))
+}
+
+func (handler *Handler) UpdateRole(context *gin.Context) {
+	roleId, parseError := request.ParamUUID(context, "id")
+
+	if parseError != nil {
+		context.Error(parseError)
+		return
+	}
+
+	var updateRoleDto role_dto.UpdateRoleDto
+
+	if err := context.ShouldBindJSON(&updateRoleDto); err != nil {
+		context.Error(request.BindError(err))
+		return
+	}
+
+	role, err := handler.roleService.UpdateRole(context.Request.Context(), &updateRoleDto, roleId)
+
+	if err != nil {
+		context.Error(err)
+		return
+	}
+
+	context.JSON(http.StatusOK, response.NewResponse("Role updated successfully", true, role))
+}
+
+func (handler *Handler) DeleteRole(context *gin.Context) {
+	roleId, parseError := request.ParamUUID(context, "id")
+
+	if parseError != nil {
+		context.Error(parseError)
+		return
+	}
+
+	err := handler.roleService.DeleteRole(context.Request.Context(), roleId)
+
+	if err != nil {
+		context.Error(err)
+		return
+	}
+
+	context.JSON(http.StatusOK, response.NewResponse("Role deleted successfully", true, nil))
+}
