@@ -71,7 +71,7 @@ func TestSetPassword(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "set long password",
+			name:        "password longer than 72 characters should return an error",
 			password:    "this-is-a-very-long-password-that-should-still-be-accepted-by-the-set-password-function",
 			expectError: true,
 		},

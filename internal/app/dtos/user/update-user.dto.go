@@ -12,7 +12,7 @@ type UpdateUserDto struct {
 	FullName *string `json:"fullName" binding:"omitempty,min=1"`
 
 	RoleId   *types.UUID `json:"roleId"`
-	Password *string     `json:"password" binding:"omitempty,min=8"`
+	Password *string     `json:"password" binding:"omitempty,min=8,max=72"`
 }
 
 func (dto *UpdateUserDto) ApplyTo(userData *models.User) {

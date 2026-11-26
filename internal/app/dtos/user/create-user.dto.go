@@ -10,7 +10,7 @@ type CreateUserDto struct {
 	Email    string `json:"email" binding:"email"`
 	FullName string `json:"fullName" binding:"required"`
 
-	Password string      `json:"password" binding:"required,min=8"`
+	Password string      `json:"password" binding:"required,min=8,max=72"`
 	RoleId   *types.UUID `json:"roleId" binding:"required"`
 }
 

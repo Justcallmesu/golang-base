@@ -35,6 +35,10 @@ func (user *User) SetPassword(password string) error {
 		return errors.New("password cannot be empty")
 	}
 
+	if len(password) > 72 {
+		return errors.New("password cannot be longer than 72 characters")
+	}
+
 	encryptedBytes, encryptionError := bcrypt.GenerateFromPassword([]byte(password), passwordHashCost)
 
 	if encryptionError != nil {
