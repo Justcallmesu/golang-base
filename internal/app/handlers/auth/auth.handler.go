@@ -67,9 +67,9 @@ func (handler *AuthHandler) Me(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, response.NewResponse("User fetched successfully", true, response.NewResponse("success", true, gin.H{"user": userData,
+	context.JSON(http.StatusOK, response.NewResponse("User fetched successfully", true, gin.H{"user": userData,
 		"navigationMenu": navigationMenu,
-	})))
+	}))
 
 }
 
