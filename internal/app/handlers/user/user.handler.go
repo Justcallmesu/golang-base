@@ -74,7 +74,7 @@ func (handler *Handler) CreateUser(context *gin.Context) {
 		return
 	}
 
-	context.JSON(201, response.NewResponse("User created successfully", true, user))
+	context.JSON(http.StatusCreated, response.NewResponse("User created successfully", true, user))
 }
 
 func (handler *Handler) UpdateUser(context *gin.Context) {
