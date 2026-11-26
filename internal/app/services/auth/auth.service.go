@@ -51,11 +51,11 @@ func (service *Service) Login(context context.Context, credentials *dtos.LoginUs
 
 	// Generate JWT token
 
-	accessToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.AccessTokenType, foundUser.TokenVersion)
+	accessToken, loginError := service.jwtService.GenerateToken(foundUser.ID, *foundUser.RoleId, foundUser.Username, types.AccessTokenType, foundUser.TokenVersion)
 	if loginError != nil {
 		return nil, nil, nil, loginError
 	}
-	refreshToken, loginError := service.jwtService.GenerateToken(foundUser.ID, foundUser.Username, types.RefreshTokenType, foundUser.TokenVersion)
+	refreshToken, loginError := service.jwtService.GenerateToken(foundUser.ID, *foundUser.RoleId, foundUser.Username, types.RefreshTokenType, foundUser.TokenVersion)
 
 	if loginError != nil {
 		return nil, nil, nil, loginError
@@ -143,12 +143,12 @@ func (service *Service) RefreshTokens(context context.Context, refreshToken stri
 		return nil, apperror.Unauthorized("session revoked")
 	}
 
-	accessToken, accessTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.AccessTokenType, foundUser.TokenVersion)
+	accessToken, accessTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.RoleID, claims.Username, types.AccessTokenType, foundUser.TokenVersion)
 	if accessTokenGenerateError != nil {
 		return nil, apperror.Internal(accessTokenGenerateError)
 	}
 
-	refreshToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.Username, types.RefreshTokenType, foundUser.TokenVersion)
+	refreshToken, refreshTokenGenerateError := service.jwtService.GenerateToken(claims.UserID, claims.RoleID, claims.Username, types.RefreshTokenType, foundUser.TokenVersion)
 
 	if refreshTokenGenerateError != nil {
 		return nil, apperror.Internal(refreshTokenGenerateError)
