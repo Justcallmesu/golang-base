@@ -42,8 +42,8 @@ func (repository *Repository) FindAll(queryParams *user_dtos.UserQueryDto, conte
 		queryBuilder = queryBuilder.Where("users.username LIKE ? OR roles.name LIKE ?", searchPattern, searchPattern)
 	}
 
-	if queryParams.RoleId != nil {
-		queryBuilder = queryBuilder.Where("users.role_id = ?", *queryParams.RoleId)
+	if queryParams.RoleId != "" {
+		queryBuilder = queryBuilder.Where("users.role_id = ?", queryParams.RoleId)
 	}
 
 	if queryParams.SortBy != "" && queryParams.SortDir != "" {
