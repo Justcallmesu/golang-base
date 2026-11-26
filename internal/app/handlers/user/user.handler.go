@@ -119,7 +119,7 @@ func (handler *Handler) DeleteUser(context *gin.Context) {
 		return
 	}
 
-	if currentUser.UserID.String() == userId.String() {
+	if currentUser.UserID == userId {
 		context.Error(apperror.BadRequest("you cannot delete your own account"))
 		return
 	}
